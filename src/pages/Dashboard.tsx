@@ -1,7 +1,19 @@
-import { Package, TrendingDown, AlertTriangle, TrendingUp, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { Package, TrendingDown, AlertTriangle, TrendingUp, Sparkles, Search, TrendingUp as TrendingUpIcon } from "lucide-react";
 import { KPICard } from "@/components/KPICard";
 import { AISuggestionCard } from "@/components/AISuggestionCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { InventoryCard } from "@/components/InventoryCard";
 import {
   BarChart,
   Bar,
@@ -10,6 +22,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  LineChart,
+  Line,
 } from "recharts";
 
 const stockData = [
@@ -19,7 +33,95 @@ const stockData = [
   { name: "Platinum", value: 10 },
 ];
 
+// Simplified inventory data for popup
+const topInventoryItems = [
+  {
+    category: "Gold Chains",
+    icon: "🔗",
+    stockCount: 156,
+    sales30d: 48,
+    ageing: 12,
+    deadstockRisk: "low" as const,
+    reorderSuggestion: true,
+    confidence: 92,
+    trend: "rising" as const,
+  },
+  {
+    category: "Diamond Earrings",
+    icon: "💎",
+    stockCount: 89,
+    sales30d: 12,
+    ageing: 45,
+    deadstockRisk: "medium" as const,
+    reorderSuggestion: false,
+    confidence: 78,
+    trend: "falling" as const,
+  },
+  {
+    category: "Silver Bangles",
+    icon: "⚪",
+    stockCount: 234,
+    sales30d: 18,
+    ageing: 67,
+    deadstockRisk: "high" as const,
+    reorderSuggestion: false,
+    confidence: 85,
+    trend: "falling" as const,
+  },
+  {
+    category: "Gold Necklaces",
+    icon: "📿",
+    stockCount: 112,
+    sales30d: 35,
+    ageing: 18,
+    deadstockRisk: "low" as const,
+    reorderSuggestion: true,
+    confidence: 88,
+    trend: "rising" as const,
+  },
+];
+
+// Market trends data for popup
+const trendingCategories = [
+  { name: "Lightweight Gold Chains", trend: "up", change: "+24%", color: "text-success" },
+  { name: "Diamond Studs", trend: "up", change: "+18%", color: "text-success" },
+  { name: "Temple Jewellery", trend: "up", change: "+15%", color: "text-success" },
+  { name: "Silver Anklets", trend: "down", change: "-8%", color: "text-destructive" },
+];
+
+const marketTrendData = [
+  { month: "Jan", gold: 45, silver: 30, diamond: 15 },
+  { month: "Feb", gold: 52, silver: 28, diamond: 18 },
+  { month: "Mar", gold: 48, silver: 32, diamond: 22 },
+  { month: "Apr", gold: 61, silver: 35, diamond: 25 },
+];
+
+// Keywords data for popup
+const keywordSampleData = [
+  { month: "Jan", searches: 45 },
+  { month: "Feb", searches: 52 },
+  { month: "Mar", searches: 48 },
+  { month: "Apr", searches: 61 },
+];
+
+const relatedSearches = [
+  "gold chain designs",
+  "22kt gold chain price",
+  "lightweight gold chains for women",
+  "gold chain with pendant",
+];
+
 export default function Dashboard() {
+  const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [marketOpen, setMarketOpen] = useState(false);
+  const [keywordsOpen, setKeywordsOpen] = useState(false);
+  const [keywordQuery, setKeywordQuery] = useState("gold chain");
+  const [hasSearched, setHasSearched] = useState(false);
+
+  const handleKeywordSearch = () => {
+    setHasSearched(true);
+  };
+
   return (
     <div className="space-y-6">
       {/* AI Daily Suggestion - Hero Section */}
@@ -118,24 +220,234 @@ export default function Dashboard() {
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <button className="w-full rounded-lg border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md">
-              <p className="font-semibold text-foreground mb-1">View Inventory</p>
-              <p className="text-xs text-muted-foreground">
-                Check stock levels and ageing
-              </p>
-            </button>
-            <button className="w-full rounded-lg border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md">
-              <p className="font-semibold text-foreground mb-1">Market Trends</p>
-              <p className="text-xs text-muted-foreground">
-                See what's trending now
-              </p>
-            </button>
-            <button className="w-full rounded-lg border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md">
-              <p className="font-semibold text-foreground mb-1">Keyword Search</p>
-              <p className="text-xs text-muted-foreground">
-                Research market demand
-              </p>
-            </button>
+            <Dialog open={inventoryOpen} onOpenChange={setInventoryOpen}>
+              <DialogTrigger asChild>
+                <button className="w-full rounded-lg border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md">
+                  <p className="font-semibold text-foreground mb-1">View Inventory</p>
+                  <p className="text-xs text-muted-foreground">
+                    Check stock levels and ageing
+                  </p>
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Inventory Overview</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Key inventory items with stock levels, sales velocity, and ageing metrics
+                  </p>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {topInventoryItems.map((item) => (
+                      <InventoryCard key={item.category} {...item} />
+                    ))}
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={marketOpen} onOpenChange={setMarketOpen}>
+              <DialogTrigger asChild>
+                <button className="w-full rounded-lg border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md">
+                  <p className="font-semibold text-foreground mb-1">Market Trends</p>
+                  <p className="text-xs text-muted-foreground">
+                    See what's trending now
+                  </p>
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Market Trends</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Trending in Indian Jewellery Market</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {trendingCategories.map((category) => (
+                          <div
+                            key={category.name}
+                            className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="flex items-center gap-3">
+                              {category.trend === "up" ? (
+                                <TrendingUpIcon className="h-4 w-4 text-success" />
+                              ) : (
+                                <TrendingDown className="h-4 w-4 text-destructive" />
+                              )}
+                              <span className="text-sm font-medium text-foreground">{category.name}</span>
+                            </div>
+                            <Badge variant={category.trend === "up" ? "default" : "destructive"}>
+                              {category.change}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Category Interest Over Time</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={250}>
+                        <LineChart data={marketTrendData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                          <YAxis stroke="hsl(var(--muted-foreground))" />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--card))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "0.5rem",
+                            }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="gold"
+                            stroke="hsl(var(--chart-1))"
+                            strokeWidth={2}
+                            name="Gold"
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="silver"
+                            stroke="hsl(var(--chart-2))"
+                            strokeWidth={2}
+                            name="Silver"
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="diamond"
+                            stroke="hsl(var(--chart-3))"
+                            strokeWidth={2}
+                            name="Diamond"
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={keywordsOpen} onOpenChange={setKeywordsOpen}>
+              <DialogTrigger asChild>
+                <button className="w-full rounded-lg border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md">
+                  <p className="font-semibold text-foreground mb-1">Keyword Search</p>
+                  <p className="text-xs text-muted-foreground">
+                    Research market demand
+                  </p>
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Keyword Intelligence</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            placeholder="Enter keyword (e.g., gold chain, diamond earrings)..."
+                            className="pl-9"
+                            value={keywordQuery}
+                            onChange={(e) => setKeywordQuery(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleKeywordSearch()}
+                          />
+                        </div>
+                        <Button onClick={handleKeywordSearch}>
+                          <Search className="mr-2 h-4 w-4" />
+                          Search
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {hasSearched && (
+                    <>
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Interest Over Time: "{keywordQuery}"</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={200}>
+                            <LineChart data={keywordSampleData}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                              <YAxis stroke="hsl(var(--muted-foreground))" />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "hsl(var(--card))",
+                                  border: "1px solid hsl(var(--border))",
+                                  borderRadius: "0.5rem",
+                                }}
+                              />
+                              <Line
+                                type="monotone"
+                                dataKey="searches"
+                                stroke="hsl(var(--primary))"
+                                strokeWidth={3}
+                              />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Related Search Phrases</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-2">
+                              {relatedSearches.map((search, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-center gap-2 p-2 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                                >
+                                  <TrendingUpIcon className="h-4 w-4 text-primary" />
+                                  <span className="text-sm text-foreground">{search}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card className="border-primary/20 bg-primary/5">
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                              <span>AI Recommendation</span>
+                              <Badge>92% Confidence</Badge>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <div>
+                              <h4 className="font-semibold text-foreground mb-2 text-sm">
+                                High Demand Detected
+                              </h4>
+                              <p className="text-xs text-muted-foreground leading-relaxed">
+                                Search interest for "{keywordQuery}" has grown 34% in the last quarter. 
+                                This indicates strong market demand.
+                              </p>
+                            </div>
+                            <div className="pt-2">
+                              <p className="text-xs font-semibold text-foreground">
+                                Potential Impact: <span className="text-success">High</span>
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
       </div>

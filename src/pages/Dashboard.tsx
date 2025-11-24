@@ -1,4 +1,4 @@
-import { Package, TrendingDown, AlertTriangle, TrendingUp } from "lucide-react";
+import { Package, TrendingDown, AlertTriangle, TrendingUp, Sparkles } from "lucide-react";
 import { KPICard } from "@/components/KPICard";
 import { AISuggestionCard } from "@/components/AISuggestionCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,16 +22,33 @@ const stockData = [
 export default function Dashboard() {
   return (
     <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="rounded-xl bg-gradient-to-br from-primary/10 via-gold-light/5 to-transparent p-6 md:p-8 border border-primary/10">
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          Welcome back, Raj Store
-        </h1>
-        <p className="text-muted-foreground max-w-2xl">
-          Today's AI Summary: Your gold chain inventory is moving faster than expected. 
-          Consider restocking by next week. Diamond earrings are showing low movement—
-          review pricing strategy.
-        </p>
+      {/* AI Daily Suggestion - Hero Section */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-accent p-8 md:p-10 shadow-lg border-2 border-primary/20 animate-in fade-in slide-in-from-top-4 duration-700">
+        {/* Decorative glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none" />
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-sm border border-white/30">
+              <Sparkles className="h-4 w-4 text-white animate-pulse" />
+              <span className="text-sm font-semibold text-white">AI Daily Insight</span>
+            </div>
+          </div>
+          
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            Welcome back, Raj Store
+          </h1>
+          
+          <div className="space-y-3 max-w-3xl">
+            <p className="text-lg md:text-xl font-bold text-white leading-relaxed">
+              Your gold chain inventory is moving faster than expected. Consider restocking by next week.
+            </p>
+            <p className="text-base text-white/90 leading-relaxed">
+              Based on current sales velocity and market trends, your gold chain stock will deplete in 8 days. 
+              Diamond earrings are showing low movement—review pricing strategy to improve turnover.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* KPI Cards */}

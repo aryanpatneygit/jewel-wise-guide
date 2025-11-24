@@ -77,10 +77,10 @@ export default function LoadingProgress({ keyword, isComplete }: LoadingProgress
     setCurrentStageIndex(0);
     setProgress(0);
 
-    // Complete in 40 seconds and stay at 99%
-    const totalDuration = 40000; // 40 seconds total
+    // Complete in 25 seconds and stay at 99%
+    const totalDuration = 25000; // 25 seconds total
     const stageCount = LOADING_STAGES.length;
-    const stageDuration = totalDuration / stageCount; // ~5.7 seconds per stage
+    const stageDuration = totalDuration / stageCount; // ~3.6 seconds per stage
 
     // Stage transition timer
     const stageTimer = setInterval(() => {
@@ -92,11 +92,11 @@ export default function LoadingProgress({ keyword, isComplete }: LoadingProgress
       });
     }, stageDuration);
 
-    // Smooth progress animation - progress to 99% over 40 seconds
+    // Smooth progress animation - progress to 99% over 25 seconds
     const maxProgress = 99;
     const updateInterval = 100; // Update every 100ms
-    const totalUpdates = totalDuration / updateInterval; // 400 updates
-    const incrementPerUpdate = maxProgress / totalUpdates; // ~0.2475 per update
+    const totalUpdates = totalDuration / updateInterval; // 250 updates
+    const incrementPerUpdate = maxProgress / totalUpdates; // ~0.396 per update
 
     const progressInterval = setInterval(() => {
       setProgress((prev) => {

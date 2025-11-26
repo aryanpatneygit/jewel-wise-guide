@@ -1,0 +1,58 @@
+[
+  {
+    "category": "BANGLE",
+    "stockValue": 78462990.76026605,
+    "avgDaysToSell": 1.0,
+    "riskScore": 36.191149063006854,
+    "itemCount": 44,
+    "trend": "rising"
+  },
+  {
+    "category": "BRACELET",
+    "stockValue": 44580217.86599732,
+    "avgDaysToSell": 1.0,
+    "riskScore": 32.03847541935383,
+    "itemCount": 27,
+    "trend": "rising"
+  },
+  {
+    "category": "CHAIN",
+    "stockValue": 83831840.87283972,
+    "avgDaysToSell": 1.0,
+    "riskScore": 48.20778678651237,
+    "itemCount": 34,
+    "trend": "rising"
+  },
+  {
+    "category": "EARRING",
+    "stockValue": 23885754.24570236,
+    "avgDaysToSell": 1.0,
+    "riskScore": 48.319876095983474,
+    "itemCount": 43,
+    "trend": "rising"
+  },
+  {
+    "category": "NECKLACE",
+    "stockValue": 77225481.56362958,
+    "avgDaysToSell": 1.0,
+    "riskScore": 38.60194702792853,
+    "itemCount": 28,
+    "trend": "rising"
+  },
+  {
+    "category": "PENDANT",
+    "stockValue": 16404173.650780562,
+    "avgDaysToSell": 1.0,
+    "riskScore": 5.625980450157827,
+    "itemCount": 37,
+    "trend": "rising"
+  },
+  {
+    "category": "RING",
+    "stockValue": 11130265.76579619,
+    "avgDaysToSell": 1.0,
+    "riskScore": 47.60842681404749,
+    "itemCount": 37,
+    "trend": "rising"
+  }
+]

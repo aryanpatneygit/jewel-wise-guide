@@ -5,7 +5,8 @@ import {
   TrendingUp, 
   Search, 
   BarChart3,
-  Sparkles
+  Sparkles,
+  Calculator
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/inventory", icon: Package, label: "Inventory" },
   { to: "/market", icon: TrendingUp, label: "Market Overview" },
+  { to: "/predictions", icon: Calculator, label: "Sales Predictor" },
   { to: "/keywords", icon: Search, label: "Keyword Intelligence" },
   { to: "/analytics", icon: BarChart3, label: "Custom Analytics" },
 ];

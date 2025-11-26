@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, GripVertical } from "lucide-react";
+import { Plus, GripVertical, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,25 +17,14 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  ScatterChart,
+  Scatter,
 } from "recharts";
+import { useQuery } from "@tanstack/react-query";
 
-const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))"];
+import { apiService } from "@/services/apiService";
 
-const categoryData = [
-  { name: "Gold", value: 45 },
-  { name: "Silver", value: 30 },
-  { name: "Diamond", value: 15 },
-  { name: "Platinum", value: 10 },
-];
-
-const performanceData = [
-  { month: "Jan", revenue: 450, profit: 120 },
-  { month: "Feb", revenue: 520, profit: 145 },
-  { month: "Mar", revenue: 480, profit: 132 },
-  { month: "Apr", revenue: 610, profit: 178 },
-  { month: "May", revenue: 550, profit: 156 },
-  { month: "Jun", revenue: 670, profit: 198 },
-];
+const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))", "hsl(var(--primary))", "hsl(var(--accent))"];
 
 const availableModules = [
   { id: "demand", label: "Demand Prediction", enabled: true },
@@ -49,9 +38,73 @@ const availableModules = [
 export default function Analytics() {
   const [modules, setModules] = useState(availableModules);
 
+  const { data: analytics, isLoading: analyticsLoading, error: analyticsError } = useQuery({
+    queryKey: ['analytics'],
+    queryFn: () => apiService.fetchAnalyticsPerformance(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: inventory, isLoading: inventoryLoading, error: inventoryError } = useQuery({
+    queryKey: ['inventory-analytics'],
+    queryFn: () => apiService.fetchInventoryCategories(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: predictions } = useQuery({
+    queryKey: ['prediction-comparison'],
+    queryFn: () => apiService.fetchPredictionComparison(100),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const toggleModule = (id: string) => {
     setModules(modules.map(m => m.id === id ? { ...m, enabled: !m.enabled } : m));
   };
+
+  const isLoading = analyticsLoading || inventoryLoading;
+  const error = analyticsError || inventoryError;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading analytics data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center text-destructive">
+          <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
+          <p>Error loading analytics: {error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Prepare data from real analytics
+  const categoryData = inventory?.map((cat: any) => ({
+    name: cat.category,
+    value: cat.itemCount,
+    stockValue: cat.stockValue,
+  })) || [];
+
+  const performanceData = inventory?.map((cat: any, idx: number) => ({
+    category: cat.category.substring(0, 10),
+    revenue: Math.round(cat.stockValue / 100000),
+    turnover: Math.round(cat.avgDaysToSell),
+    risk: Math.round(cat.riskScore),
+  })) || [];
+
+  // Use real prediction comparison data
+  const predictionSample = predictions?.map((pred) => ({
+    actual: Math.round(pred.actual),
+    predicted: Math.round(pred.predicted),
+    category: pred.category,
+  })) || [];
 
   return (
     <div className="space-y-6">
@@ -68,6 +121,41 @@ export default function Analytics() {
           Save Layout
         </Button>
       </div>
+
+      {/* Model Performance Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Model Performance Metrics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-4">
+            <div className="p-4 rounded-lg border border-border bg-card">
+              <p className="text-sm text-muted-foreground mb-1">R² Score</p>
+              <p className="text-2xl font-bold text-foreground">
+                {(analytics?.model_performance?.r2_score * 100).toFixed(2)}%
+              </p>
+            </div>
+            <div className="p-4 rounded-lg border border-border bg-card">
+              <p className="text-sm text-muted-foreground mb-1">RMSE</p>
+              <p className="text-2xl font-bold text-foreground">
+                ₹{analytics?.model_performance?.rmse?.toLocaleString()}
+              </p>
+            </div>
+            <div className="p-4 rounded-lg border border-border bg-card">
+              <p className="text-sm text-muted-foreground mb-1">MAE</p>
+              <p className="text-2xl font-bold text-foreground">
+                ₹{analytics?.model_performance?.mae?.toLocaleString()}
+              </p>
+            </div>
+            <div className="p-4 rounded-lg border border-border bg-card">
+              <p className="text-sm text-muted-foreground mb-1">MAPE</p>
+              <p className="text-2xl font-bold text-foreground">
+                {analytics?.model_performance?.mape?.toFixed(2)}%
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Module Selector */}
       <Card>
@@ -98,29 +186,35 @@ export default function Analytics() {
         {modules.find(m => m.id === "demand" && m.enabled) && (
           <Card>
             <CardHeader>
-              <CardTitle>Demand Prediction</CardTitle>
+              <CardTitle>Actual vs Predicted Sales</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={performanceData}>
+                <ScatterChart data={predictionSample}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <XAxis 
+                    dataKey="actual" 
+                    stroke="hsl(var(--muted-foreground))" 
+                    name="Actual Sales"
+                  />
+                  <YAxis 
+                    dataKey="predicted" 
+                    stroke="hsl(var(--muted-foreground))" 
+                    name="Predicted Sales"
+                  />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "hsl(var(--card))",
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "0.5rem",
                     }}
+                    formatter={(value: any) => `₹${value.toLocaleString()}`}
                   />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
-                    name="Revenue (₹000s)"
+                  <Scatter
+                    name="Predictions"
+                    fill="hsl(var(--primary))"
                   />
-                </LineChart>
+                </ScatterChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>

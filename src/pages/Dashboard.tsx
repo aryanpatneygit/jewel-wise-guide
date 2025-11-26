@@ -1,7 +1,8 @@
-import { Package, TrendingDown, AlertTriangle, TrendingUp, Sparkles } from "lucide-react";
+import { Package, TrendingDown, AlertTriangle, TrendingUp, Sparkles, RefreshCw } from "lucide-react";
 import { KPICard } from "@/components/KPICard";
 import { AISuggestionCard } from "@/components/AISuggestionCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   BarChart,
   Bar,
@@ -11,17 +12,71 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-
-const stockData = [
-  { name: "Gold", value: 45 },
-  { name: "Silver", value: 30 },
-  { name: "Diamond", value: 15 },
-  { name: "Platinum", value: 10 },
-];
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiService } from "@/services/apiService";
 
 export default function Dashboard() {
+  const queryClient = useQueryClient();
+
+  // Fetch real data from API
+  const { data: kpis, isLoading, error, refetch: refetchKPIs } = useQuery({
+    queryKey: ['kpis'],
+    queryFn: () => apiService.fetchKPIs(),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  // Fetch inventory categories for stock distribution chart
+  const { data: categories, refetch: refetchCategories } = useQuery({
+    queryKey: ['inventory-categories'],
+    queryFn: () => apiService.fetchInventoryCategories(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const handleRefresh = async () => {
+    await Promise.all([refetchKPIs(), refetchCategories()]);
+  };
+
+  // Transform category data for the chart
+  const stockData = categories?.map(cat => ({
+    name: cat.category,
+    value: Math.round(cat.stockValue / 1000000) // Convert to Millions for better visualization
+  })) || [];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center text-destructive">
+          <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
+          <p>Error loading data: {error.message}</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
+      {/* Header with Refresh Button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground">Real-time insights from your ML models</p>
+        </div>
+        <Button onClick={handleRefresh} variant="outline" size="sm">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh Data
+        </Button>
+      </div>
+
       {/* AI Daily Suggestion - Hero Section */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-accent p-8 md:p-10 shadow-lg border-2 border-primary/20 animate-in fade-in slide-in-from-top-4 duration-700">
         {/* Decorative glow effect */}
@@ -55,31 +110,31 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <KPICard
           title="Total Stock Value"
-          value="₹48.5L"
+          value={`₹${(kpis.totalStockValue / 10000000).toFixed(2)}Cr`}
           change="+5.2% from last month"
           changeType="positive"
           icon={Package}
         />
         <KPICard
-          title="Ageing Stock"
-          value="₹12.3L"
-          change="23% of total inventory"
+          title="Ageing Stock (90+ days)"
+          value={kpis.ageingStock.toString()}
+          change={`${((kpis.ageingStock / kpis.totalItems) * 100).toFixed(1)}% of total inventory`}
           changeType="neutral"
           icon={TrendingDown}
           iconBg="bg-warning/10"
         />
         <KPICard
           title="Predicted Deadstock"
-          value="₹4.8L"
-          change="-12% vs last period"
+          value={kpis.predictedDeadstock.toString()}
+          change={`${((kpis.predictedDeadstock / kpis.totalItems) * 100).toFixed(1)}% of items`}
           changeType="positive"
           icon={AlertTriangle}
           iconBg="bg-destructive/10"
         />
         <KPICard
           title="Fast Moving Items"
-          value="42"
-          change="8 items added this week"
+          value={kpis.fastMovingItems.toString()}
+          change={`${((kpis.fastMovingItems / kpis.totalItems) * 100).toFixed(1)}% fast movers`}
           changeType="positive"
           icon={TrendingUp}
           iconBg="bg-success/10"

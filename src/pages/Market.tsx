@@ -3,9 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, TrendingDown, RefreshCw, AlertCircle } from "lucide-react";
+import { TrendingUp, TrendingDown, RefreshCw, AlertCircle, AlertTriangle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
+  BarChart,
+  Bar,
   LineChart,
   Line,
   AreaChart,
@@ -15,42 +17,58 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 import { analyzeMarketOverview, isGeminiConfigured } from "@/services/geminiService";
+import { apiService } from "@/services/apiService";
 
 export default function Market() {
-  // Use React Query with caching strategy
-  const { data: marketData, isLoading, error, refetch, isFetching } = useQuery({
+  // Fetch real market trends from API
+  const { data: marketTrends, isLoading: trendsLoading, error: trendsError } = useQuery({
+    queryKey: ['market-trends'],
+    queryFn: () => apiService.fetchMarketTrends(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Optional: Keep Gemini AI insights as supplementary
+  const { data: marketData, isLoading: aiLoading, error: aiError, refetch, isFetching } = useQuery({
     queryKey: ["market-overview"],
     queryFn: analyzeMarketOverview,
-    staleTime: Infinity, // Data never becomes stale automatically
-    gcTime: 24 * 60 * 60 * 1000, // Keep in cache for 24 hours
+    staleTime: Infinity,
+    gcTime: 24 * 60 * 60 * 1000,
     retry: 1,
+    enabled: isGeminiConfigured(), // Only run if API is configured
   });
+
+  const isLoading = trendsLoading;
+  const error = trendsError;
 
   const handleRefresh = () => {
     refetch();
   };
 
-  // Check if API is configured
-  if (!isGeminiConfigured()) {
+  if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Market Overview</h1>
-          <p className="text-muted-foreground mt-1">
-            Industry trends, seasonal insights, and demand predictions
-          </p>
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading market data...</p>
         </div>
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Gemini API is not configured. Please add your VITE_GEMINI_API_KEY to the .env file.
-          </AlertDescription>
-        </Alert>
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center text-destructive">
+          <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
+          <p>Error loading market data: {error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header with Refresh Button */}
@@ -73,45 +91,8 @@ export default function Market() {
         </Button>
       </div>
 
-      {/* Error State */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {error instanceof Error ? error.message : "Failed to load market overview. Please try again."}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Loading State */}
-      {isLoading && (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-64" />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-64" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-[300px] w-full" />
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Market Data Display */}
-      {marketData && !isLoading && (
+      {/* Real Market Trends */}
+      {marketTrends && (
         <>
           {/* Trending Categories */}
           <Card>
@@ -142,16 +123,16 @@ export default function Market() {
             </CardContent>
           </Card>
 
-          {/* Category Trends */}
+          {/* Category Performance Comparison */}
           <Card>
             <CardHeader>
-              <CardTitle>Category Interest Over Time</CardTitle>
+              <CardTitle>Category Performance Comparison</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={marketData.categoryTrends}>
+                <BarChart data={marketTrends}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                  <XAxis dataKey="category" stroke="hsl(var(--muted-foreground))" />
                   <YAxis stroke="hsl(var(--muted-foreground))" />
                   <Tooltip
                     contentStyle={{
@@ -159,44 +140,41 @@ export default function Market() {
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "0.5rem",
                     }}
+                    formatter={(value: any, name: string) => {
+                      if (name === 'Total Sales') return `₹${(value / 10000000).toFixed(2)}Cr`;
+                      if (name === 'Turnover Days') return `${value.toFixed(0)} days`;
+                      return `${value.toFixed(0)}%`;
+                    }}
                   />
-                  <Line
-                    type="monotone"
-                    dataKey="gold"
-                    stroke="hsl(var(--chart-1))"
-                    strokeWidth={2}
-                    name="Gold"
+                  <Legend />
+                  <Bar
+                    dataKey="total_sales"
+                    fill="hsl(var(--primary))"
+                    name="Total Sales"
+                    radius={[8, 8, 0, 0]}
                   />
-                  <Line
-                    type="monotone"
-                    dataKey="silver"
-                    stroke="hsl(var(--chart-2))"
-                    strokeWidth={2}
-                    name="Silver"
+                  <Bar
+                    dataKey="risk"
+                    fill="hsl(var(--destructive))"
+                    name="Risk Score"
+                    radius={[8, 8, 0, 0]}
                   />
-                  <Line
-                    type="monotone"
-                    dataKey="diamond"
-                    stroke="hsl(var(--chart-3))"
-                    strokeWidth={2}
-                    name="Diamond"
-                  />
-                </LineChart>
+                </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          {/* Demand Prediction */}
+          {/* Category Insights */}
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Search Interest Trend</CardTitle>
+                <CardTitle>Turnover Performance</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={200}>
-                  <AreaChart data={marketData.searchInterest}>
+                  <AreaChart data={marketTrends}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="week" stroke="hsl(var(--muted-foreground))" />
+                    <XAxis dataKey="category" stroke="hsl(var(--muted-foreground))" />
                     <YAxis stroke="hsl(var(--muted-foreground))" />
                     <Tooltip
                       contentStyle={{
@@ -204,13 +182,15 @@ export default function Market() {
                         border: "1px solid hsl(var(--border))",
                         borderRadius: "0.5rem",
                       }}
+                      formatter={(value: any) => `${value.toFixed(1)} days`}
                     />
                     <Area
                       type="monotone"
-                      dataKey="interest"
+                      dataKey="turnover_days"
                       stroke="hsl(var(--primary))"
                       fill="hsl(var(--primary))"
                       fillOpacity={0.2}
+                      name="Days to Sell"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -219,13 +199,57 @@ export default function Market() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Seasonal Insights</CardTitle>
+                <CardTitle>Key Insights</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {marketData.seasonalInsights.map((insight, index) => (
+                {marketTrends.slice(0, 3).map((cat: any, index: number) => {
+                  const insights = [
+                    { emoji: "💰", title: "Highest Sales", cat: marketTrends.reduce((prev: any, curr: any) => prev.total_sales > curr.total_sales ? prev : curr) },
+                    { emoji: "⚡", title: "Fastest Moving", cat: marketTrends.reduce((prev: any, curr: any) => prev.turnover_days < curr.turnover_days ? prev : curr) },
+                    { emoji: "⚠️", title: "Highest Risk", cat: marketTrends.reduce((prev: any, curr: any) => prev.risk > curr.risk ? prev : curr) },
+                  ];
+                  
+                  return (
+                    <div 
+                      key={index}
+                      className="p-4 rounded-lg bg-primary/5 border border-primary/20"
+                    >
+                      <p className="font-semibold text-foreground mb-1">
+                        {insights[index].emoji} {insights[index].title}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {insights[index].cat.category} - ₹{(insights[index].cat.avg_sales / 100000).toFixed(2)}L avg
+                      </p>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Optional: AI Insights if available */}
+          {marketData && !aiLoading && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>AI Market Insights</CardTitle>
+                  <Button
+                    onClick={handleRefresh}
+                    disabled={isFetching}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+                    Refresh
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {marketData.seasonalInsights?.map((insight: any, index: number) => (
                   <div 
                     key={index}
-                    className="p-4 rounded-lg bg-primary/5 border border-primary/20"
+                    className="p-4 rounded-lg bg-accent/10 border border-accent/20"
                   >
                     <p className="font-semibold text-foreground mb-1">
                       {insight.emoji} {insight.title}
@@ -237,7 +261,7 @@ export default function Market() {
                 ))}
               </CardContent>
             </Card>
-          </div>
+          )}
         </>
       )}
     </div>

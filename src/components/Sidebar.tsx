@@ -4,8 +4,13 @@ import {
   Package, 
   TrendingUp, 
   Search, 
+<<<<<<< HEAD
   Sparkles,
   Calculator
+=======
+  BarChart3,
+  Sparkles
+>>>>>>> parent of 2819360 (feat: Integrate ML models with JewelAI frontend (Phases 1-4))
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +23,6 @@ const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/inventory", icon: Package, label: "Inventory" },
   { to: "/market", icon: TrendingUp, label: "Market Overview" },
-  { to: "/predictions", icon: Calculator, label: "Sales Predictor" },
   { to: "/keywords", icon: Search, label: "Keyword Intelligence" },
 ];
 

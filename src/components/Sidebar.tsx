@@ -21,6 +21,7 @@ const navItems = [
   { to: "/inventory", icon: Package, label: "Inventory" },
   { to: "/market", icon: TrendingUp, label: "Market Overview" },
   { to: "/keywords", icon: Search, label: "Keyword Intelligence" },
+  { to: "/analytics", icon: BarChart3, label: "Custom Analytics" },
 ];
 
 export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {

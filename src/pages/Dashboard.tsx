@@ -4,7 +4,6 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from "@dnd-kit/sortable";
 import { KPICard } from "@/components/KPICard";
 import { AISuggestionCard } from "@/components/AISuggestionCard";
-import { JewelAIChat } from "@/components/JewelAIChat";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -950,73 +949,6 @@ function DashboardContent() {
         </Card>
       )}
 
-<<<<<<< HEAD
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <button 
-              onClick={() => setInventoryOpen(true)}
-              className="w-full rounded-lg border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md"
-            >
-              <p className="font-semibold text-foreground mb-1">View Inventory</p>
-              <p className="text-xs text-muted-foreground">
-                Check stock levels and ageing
-              </p>
-            </button>
-            <button 
-              onClick={() => setMarketOpen(true)}
-              className="w-full rounded-lg border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md"
-            >
-              <p className="font-semibold text-foreground mb-1">Market Trends</p>
-              <p className="text-xs text-muted-foreground">
-                See what's trending now
-              </p>
-            </button>
-            <button 
-              onClick={() => setKeywordsOpen(true)}
-              className="w-full rounded-lg border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md"
-            >
-              <p className="font-semibold text-foreground mb-1">Keyword Search</p>
-              <p className="text-xs text-muted-foreground">
-                Research market demand
-              </p>
-            </button>
-          </CardContent>
-        </Card>
-
-      {/* Inventory Modal */}
-      <Dialog open={inventoryOpen} onOpenChange={setInventoryOpen}>
-        <DialogContent className="max-w-[90vw] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Inventory Management</DialogTitle>
-          </DialogHeader>
-          <Inventory />
-        </DialogContent>
-      </Dialog>
-
-      {/* Market Trends Modal */}
-      <Dialog open={marketOpen} onOpenChange={setMarketOpen}>
-        <DialogContent className="max-w-[90vw] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Market Overview</DialogTitle>
-          </DialogHeader>
-          <Market />
-        </DialogContent>
-      </Dialog>
-
-      {/* Keywords Modal */}
-      <Dialog open={keywordsOpen} onOpenChange={setKeywordsOpen}>
-        <DialogContent className="max-w-[90vw] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Keyword Intelligence</DialogTitle>
-          </DialogHeader>
-          <Keywords />
-        </DialogContent>
-      </Dialog>
-=======
       {/* AI Daily Suggestion - Hero Section */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-accent p-8 md:p-10 shadow-lg border-2 border-primary/20 animate-in fade-in slide-in-from-top-4 duration-700">
         {/* Decorative glow effect */}
@@ -1044,7 +976,6 @@ function DashboardContent() {
             </p>
           </div>
         </div>
->>>>>>> parent of b660909 (Reverted to commit 3c906b6c4f88194db85be0f1c5b601550854e2cd)
       </div>
 
       {/* Customizable Cards with Drag and Drop */}
@@ -1101,22 +1032,6 @@ function DashboardContent() {
           </SortableContext>
         </div>
       </DndContext>
-
-      {/* Jewel AI Chat Section */}
-      <div className="mt-8">
-        <div className="mb-4">
-          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
-            Chat with Jewel AI
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Ask questions, get instant insights, and receive proactive alerts
-          </p>
-        </div>
-        <div className="h-[600px]">
-          <JewelAIChat />
-        </div>
-      </div>
     </div>
   );
 }

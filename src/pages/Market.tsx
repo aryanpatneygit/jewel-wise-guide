@@ -58,12 +58,12 @@ export default function Market() {
     );
   }
 
-  if (error) {
+  if (error || !marketTrends) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center text-destructive">
           <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
-          <p>Error loading market data: {error.message}</p>
+          <p>Error loading market data: {error?.message || 'No data available'}</p>
         </div>
       </div>
     );
@@ -92,7 +92,7 @@ export default function Market() {
       </div>
 
       {/* Real Market Trends */}
-      {marketTrends && (
+      {marketTrends && marketTrends.length > 0 && (
         <>
           {/* Trending Categories */}
           <Card>
@@ -101,24 +101,31 @@ export default function Market() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {marketData.trendingCategories.map((category) => (
-                  <div
-                    key={category.name}
-                    className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      {category.trend === "up" ? (
-                        <TrendingUp className="h-5 w-5 text-success" />
-                      ) : (
-                        <TrendingDown className="h-5 w-5 text-destructive" />
-                      )}
-                      <span className="font-medium text-foreground">{category.name}</span>
+                {marketTrends.map((category) => {
+                  const isRising = category.risk < 40;
+                  const salesInCr = category.total_sales / 10000000;
+                  return (
+                    <div
+                      key={category.category}
+                      className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        {isRising ? (
+                          <TrendingUp className="h-5 w-5 text-success" />
+                        ) : (
+                          <TrendingDown className="h-5 w-5 text-destructive" />
+                        )}
+                        <div>
+                          <span className="font-medium text-foreground">{category.category}</span>
+                          <p className="text-xs text-muted-foreground">₹{salesInCr.toFixed(2)}Cr sales</p>
+                        </div>
+                      </div>
+                      <Badge variant={isRising ? "default" : "destructive"}>
+                        {isRising ? `Low Risk (${category.risk.toFixed(0)}%)` : `${category.risk.toFixed(0)}% Risk`}
+                      </Badge>
                     </div>
-                    <Badge variant={category.trend === "up" ? "default" : "destructive"}>
-                      {category.change}
-                    </Badge>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>

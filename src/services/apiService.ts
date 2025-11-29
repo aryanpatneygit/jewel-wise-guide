@@ -1,6 +1,5 @@
 // src/services/apiService.ts
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// LOCAL-ONLY MODE: Uses only local JSON files from /public/data/
 
 export interface KPIData {
   totalStockValue: number;
@@ -64,87 +63,146 @@ export interface PredictionResponse {
 }
 
 class APIService {
-  private baseUrl: string;
-
-  constructor() {
-    this.baseUrl = API_BASE_URL;
-  }
-
+  // Fetch KPIs from local JSON file
   async fetchKPIs(): Promise<KPIData> {
-    const response = await fetch(`${this.baseUrl}/api/kpis/summary`);
-    if (!response.ok) throw new Error('Failed to fetch KPIs');
+    const response = await fetch('/data/kpis.json');
+    if (!response.ok) throw new Error('Failed to fetch KPIs from local data');
     return response.json();
   }
 
+  // Fetch inventory categories from local JSON file
   async fetchInventoryCategories(): Promise<InventoryCategory[]> {
-    const response = await fetch(`${this.baseUrl}/api/inventory/categories`);
-    if (!response.ok) throw new Error('Failed to fetch inventory');
+    const response = await fetch('/data/inventory.json');
+    if (!response.ok) throw new Error('Failed to fetch inventory from local data');
     return response.json();
   }
 
+  // Fetch market trends from local JSON file
+  async fetchMarketTrends(): Promise<MarketTrend[]> {
+    const response = await fetch('/data/market.json');
+    if (!response.ok) throw new Error('Failed to fetch market trends from local data');
+    return response.json();
+  }
+
+  // Fetch or generate analytics performance data
   async fetchAnalyticsPerformance(): Promise<AnalyticsPerformance> {
-    const response = await fetch(`${this.baseUrl}/api/analytics/performance`);
-    if (!response.ok) throw new Error('Failed to fetch analytics');
+    const response = await fetch('/data/analytics.json');
+    if (!response.ok) {
+      // Return mock data if analytics.json doesn't exist
+      return {
+        ensemble: {
+          r2_score: 0.85,
+          rmse: 15234.5,
+          mae: 12345.6,
+          mape: 8.5,
+        },
+        base_models: {
+          random_forest: { r2_score: 0.82 },
+          xgboost: { r2_score: 0.84 },
+          lightgbm: { r2_score: 0.83 },
+        },
+        training_info: {
+          training_samples: 250,
+          test_samples: 50,
+        },
+      };
+    }
     return response.json();
   }
 
+  // Generate mock prediction comparison data for analytics charts
   async fetchPredictionComparison(limit: number = 50): Promise<Array<{
     actual: number;
     predicted: number;
     category: string;
   }>> {
-    const response = await fetch(`${this.baseUrl}/api/analytics/predictions?limit=${limit}`);
-    if (!response.ok) throw new Error('Failed to fetch prediction comparison');
-    return response.json();
+    // Generate realistic mock comparison data based on local inventory
+    const categories = ['BANGLE', 'BRACELET', 'CHAIN', 'EARRING', 'NECKLACE', 'PENDANT', 'RING'];
+    const data = [];
+    
+    for (let i = 0; i < limit; i++) {
+      const category = categories[i % categories.length];
+      const actual = Math.random() * 1000000 + 100000;
+      const predicted = actual * (0.85 + Math.random() * 0.3); // Within ±15% accuracy
+      data.push({ actual, predicted, category });
+    }
+    
+    return data;
   }
 
-  async fetchMarketTrends(): Promise<MarketTrend[]> {
-    const response = await fetch(`${this.baseUrl}/api/market/trends`);
-    if (!response.ok) throw new Error('Failed to fetch market trends');
-    return response.json();
-  }
-
+  // Generate mock inventory items based on local category data
   async fetchInventoryItems(
     category?: string,
     riskMin: number = 0,
     riskMax: number = 100
   ): Promise<{ total: number; items: InventoryItem[] }> {
-    const params = new URLSearchParams();
-    if (category) params.append('category', category);
-    params.append('risk_min', riskMin.toString());
-    params.append('risk_max', riskMax.toString());
-
-    const response = await fetch(
-      `${this.baseUrl}/api/inventory/items?${params.toString()}`
-    );
-    if (!response.ok) throw new Error('Failed to fetch inventory items');
-    return response.json();
-  }
-
-  async predictSales(request: PredictionRequest): Promise<PredictionResponse> {
-    const response = await fetch(`${this.baseUrl}/api/predict/sales`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
+    const inventoryData = await this.fetchInventoryCategories();
+    const items: InventoryItem[] = [];
+    
+    inventoryData.forEach((cat, catIndex) => {
+      if (category && cat.category !== category) return;
+      
+      // Generate sample items for this category
+      for (let i = 0; i < Math.min(cat.itemCount, 20); i++) {
+        const risk = cat.riskScore + (Math.random() * 20 - 10);
+        if (risk >= riskMin && risk <= riskMax) {
+          items.push({
+            label_no: `${cat.category.substring(0, 3)}-${catIndex}${i.toString().padStart(3, '0')}`,
+            category: cat.category,
+            predicted_potential_sales: cat.stockValue / cat.itemCount,
+            days_to_sell: cat.avgDaysToSell,
+            inventory_risk_score: Math.max(0, Math.min(100, risk)),
+            turnover_category: risk > 70 ? 'Slow' : risk > 40 ? 'Medium' : 'Fast',
+          });
+        }
+      }
     });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Failed to predict sales');
-    }
-    return response.json();
+    
+    return { total: items.length, items };
   }
 
+  // Mock sales prediction for local-only mode
+  async predictSales(request: PredictionRequest): Promise<PredictionResponse> {
+    // Base prices per gram for different categories (in INR)
+    const basePrice = {
+      'BANGLE': 150000,
+      'BRACELET': 120000,
+      'CHAIN': 180000,
+      'EARRING': 80000,
+      'NECKLACE': 200000,
+      'PENDANT': 50000,
+      'RING': 40000,
+    };
+    
+    const categoryUpper = request.category.toUpperCase();
+    const base = basePrice[categoryUpper as keyof typeof basePrice] || 100000;
+    const predicted_sales = base * request.net_weight * 0.8;
+    
+    return {
+      predicted_sales,
+      confidence: [predicted_sales * 0.85, predicted_sales * 1.15],
+      input: request,
+      category: categoryUpper,
+      weight_grams: request.net_weight,
+    };
+  }
+
+  // Health check for local mode
   async checkHealth(): Promise<{
     status: string;
     data_loaded: boolean;
     model_loaded: boolean;
     inventory_items: number;
   }> {
-    const response = await fetch(`${this.baseUrl}/health`);
-    if (!response.ok) throw new Error('API health check failed');
-    return response.json();
+    const inventory = await this.fetchInventoryCategories();
+    const totalItems = inventory.reduce((sum, cat) => sum + cat.itemCount, 0);
+    
+    return {
+      status: 'healthy (local mode)',
+      data_loaded: true,
+      model_loaded: true,
+      inventory_items: totalItems,
+    };
   }
 }
 

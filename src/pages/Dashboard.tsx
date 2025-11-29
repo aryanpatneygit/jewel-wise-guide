@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Package, TrendingDown, AlertTriangle, TrendingUp, Sparkles, RefreshCw } from "lucide-react";
 import { KPICard } from "@/components/KPICard";
 import { AISuggestionCard } from "@/components/AISuggestionCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   BarChart,
   Bar,
@@ -14,9 +16,17 @@ import {
 } from "recharts";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiService } from "@/services/apiService";
+import Inventory from "@/pages/Inventory";
+import Market from "@/pages/Market";
+import Keywords from "@/pages/Keywords";
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
+
+  // State for managing modal visibility
+  const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [marketOpen, setMarketOpen] = useState(false);
+  const [keywordsOpen, setKeywordsOpen] = useState(false);
 
   // Fetch real data from API
   const { data: kpis, isLoading, error, refetch: refetchKPIs } = useQuery({
@@ -53,12 +63,12 @@ export default function Dashboard() {
     );
   }
 
-  if (error) {
+  if (error || !kpis) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center text-destructive">
           <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
-          <p>Error loading data: {error.message}</p>
+          <p>Error loading data: {error?.message || 'No data available'}</p>
         </div>
       </div>
     );
@@ -173,19 +183,28 @@ export default function Dashboard() {
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <button className="w-full rounded-lg border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md">
+            <button 
+              onClick={() => setInventoryOpen(true)}
+              className="w-full rounded-lg border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md"
+            >
               <p className="font-semibold text-foreground mb-1">View Inventory</p>
               <p className="text-xs text-muted-foreground">
                 Check stock levels and ageing
               </p>
             </button>
-            <button className="w-full rounded-lg border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md">
+            <button 
+              onClick={() => setMarketOpen(true)}
+              className="w-full rounded-lg border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md"
+            >
               <p className="font-semibold text-foreground mb-1">Market Trends</p>
               <p className="text-xs text-muted-foreground">
                 See what's trending now
               </p>
             </button>
-            <button className="w-full rounded-lg border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md">
+            <button 
+              onClick={() => setKeywordsOpen(true)}
+              className="w-full rounded-lg border border-border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-md"
+            >
               <p className="font-semibold text-foreground mb-1">Keyword Search</p>
               <p className="text-xs text-muted-foreground">
                 Research market demand
@@ -193,6 +212,36 @@ export default function Dashboard() {
             </button>
           </CardContent>
         </Card>
+
+      {/* Inventory Modal */}
+      <Dialog open={inventoryOpen} onOpenChange={setInventoryOpen}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Inventory Management</DialogTitle>
+          </DialogHeader>
+          <Inventory />
+        </DialogContent>
+      </Dialog>
+
+      {/* Market Trends Modal */}
+      <Dialog open={marketOpen} onOpenChange={setMarketOpen}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Market Overview</DialogTitle>
+          </DialogHeader>
+          <Market />
+        </DialogContent>
+      </Dialog>
+
+      {/* Keywords Modal */}
+      <Dialog open={keywordsOpen} onOpenChange={setKeywordsOpen}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Keyword Intelligence</DialogTitle>
+          </DialogHeader>
+          <Keywords />
+        </DialogContent>
+      </Dialog>
       </div>
 
       {/* AI Suggestions */}

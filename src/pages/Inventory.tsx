@@ -41,12 +41,12 @@ export default function Inventory() {
     );
   }
 
-  if (error) {
+  if (error || !inventory) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center text-destructive">
           <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
-          <p>Error loading inventory: {error.message}</p>
+          <p>Error loading inventory: {error?.message || 'No data available'}</p>
         </div>
       </div>
     );

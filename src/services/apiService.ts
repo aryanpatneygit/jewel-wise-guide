@@ -18,17 +18,6 @@ export interface InventoryCategory {
   trend: 'rising' | 'falling' | 'stable';
 }
 
-export interface AnalyticsPerformance {
-  ensemble: {
-    r2_score: number;
-    rmse: number;
-    mae: number;
-    mape: number;
-  };
-  base_models: Record<string, any>;
-  training_info: Record<string, any>;
-}
-
 export interface MarketTrend {
   category: string;
   total_sales: number;
@@ -136,52 +125,6 @@ class APIService {
         avg_sales: Math.round(trend.avg_sales * ratio),
         turnover_days: Math.round(trend.turnover_days / ratio), // Inverse relationship
       }));
-    }
-    
-    return data;
-  }
-
-  // Fetch or generate analytics performance data
-  async fetchAnalyticsPerformance(): Promise<AnalyticsPerformance> {
-    const response = await fetch('/data/analytics.json');
-    if (!response.ok) {
-      // Return mock data if analytics.json doesn't exist
-      return {
-        ensemble: {
-          r2_score: 0.85,
-          rmse: 15234.5,
-          mae: 12345.6,
-          mape: 8.5,
-        },
-        base_models: {
-          random_forest: { r2_score: 0.82 },
-          xgboost: { r2_score: 0.84 },
-          lightgbm: { r2_score: 0.83 },
-        },
-        training_info: {
-          training_samples: 250,
-          test_samples: 50,
-        },
-      };
-    }
-    return response.json();
-  }
-
-  // Generate mock prediction comparison data for analytics charts
-  async fetchPredictionComparison(limit: number = 50): Promise<Array<{
-    actual: number;
-    predicted: number;
-    category: string;
-  }>> {
-    // Generate realistic mock comparison data based on local inventory
-    const categories = ['BANGLE', 'BRACELET', 'CHAIN', 'EARRING', 'NECKLACE', 'PENDANT', 'RING'];
-    const data = [];
-    
-    for (let i = 0; i < limit; i++) {
-      const category = categories[i % categories.length];
-      const actual = Math.random() * 1000000 + 100000;
-      const predicted = actual * (0.85 + Math.random() * 0.3); // Within ±15% accuracy
-      data.push({ actual, predicted, category });
     }
     
     return data;

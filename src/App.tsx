@@ -9,7 +9,6 @@ import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import Market from "./pages/Market";
 import Keywords from "./pages/Keywords";
-import Analytics from "./pages/Analytics";
 import Predictions from "./pages/Predictions";
 import NotFound from "./pages/NotFound";
 
@@ -28,7 +27,6 @@ const App = () => (
               <Route path="/inventory" element={<Inventory />} />
               <Route path="/market" element={<Market />} />
               <Route path="/keywords" element={<Keywords />} />
-              <Route path="/analytics" element={<Analytics />} />
               <Route path="/predictions" element={<Predictions />} />
             </Route>
             <Route path="*" element={<NotFound />} />

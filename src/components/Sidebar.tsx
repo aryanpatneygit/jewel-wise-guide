@@ -4,7 +4,6 @@ import {
   Package, 
   TrendingUp, 
   Search, 
-  BarChart3,
   Sparkles,
   Calculator
 } from "lucide-react";
@@ -21,7 +20,6 @@ const navItems = [
   { to: "/market", icon: TrendingUp, label: "Market Overview" },
   { to: "/predictions", icon: Calculator, label: "Sales Predictor" },
   { to: "/keywords", icon: Search, label: "Keyword Intelligence" },
-  { to: "/analytics", icon: BarChart3, label: "Custom Analytics" },
 ];
 
 export const Sidebar = ({ isOpen }: SidebarProps) => {

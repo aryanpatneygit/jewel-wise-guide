@@ -18,8 +18,8 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 25 15% 15%;
 
-    /* Gold/Amber primary for jewellery context */
-    --primary: 38 92% 50%;
+    /* Blue primary color */
+    --primary: 220 100% 43%;
     --primary-foreground: 0 0% 100%;
 
     /* Warm secondary */
@@ -47,24 +47,24 @@ All colors MUST be HSL.
     /* Subtle borders */
     --border: 35 15% 85%;
     --input: 35 15% 85%;
-    --ring: 38 92% 50%;
+    --ring: 220 100% 43%;
 
     --radius: 0.75rem;
 
     /* Sidebar */
     --sidebar-background: 25 20% 12%;
     --sidebar-foreground: 35 15% 90%;
-    --sidebar-primary: 38 92% 50%;
+    --sidebar-primary: 220 100% 43%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 25 15% 18%;
     --sidebar-accent-foreground: 35 15% 90%;
     --sidebar-border: 25 15% 22%;
-    --sidebar-ring: 38 92% 50%;
+    --sidebar-ring: 220 100% 43%;
 
     /* Custom design tokens */
     --gold-light: 45 100% 75%;
     --gold-glow: 38 92% 65%;
-    --chart-1: 38 92% 50%;
+    --chart-1: 220 100% 43%;
     --chart-2: 180 45% 35%;
     --chart-3: 142 50% 45%;
     --chart-4: 270 50% 55%;
@@ -90,7 +90,7 @@ All colors MUST be HSL.
     --popover: 25 15% 14%;
     --popover-foreground: 35 15% 90%;
 
-    --primary: 38 92% 50%;
+    --primary: 220 100% 43%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 25 15% 18%;
@@ -105,7 +105,7 @@ All colors MUST be HSL.
     --success: 142 50% 45%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    --warning: 220 100% 43%;
     --warning-foreground: 0 0% 100%;
 
     --destructive: 0 65% 55%;
@@ -113,16 +113,16 @@ All colors MUST be HSL.
 
     --border: 25 15% 22%;
     --input: 25 15% 22%;
-    --ring: 38 92% 50%;
+    --ring: 220 100% 43%;
 
     --sidebar-background: 25 20% 12%;
     --sidebar-foreground: 35 15% 90%;
-    --sidebar-primary: 38 92% 50%;
+    --sidebar-primary: 220 100% 43%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 25 15% 18%;
     --sidebar-accent-foreground: 35 15% 90%;
     --sidebar-border: 25 15% 22%;
-    --sidebar-ring: 38 92% 50%;
+    --sidebar-ring: 220 100% 43%;
   }
 }
 

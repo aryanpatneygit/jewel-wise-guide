@@ -1,4 +1,4 @@
-import { Menu, Bell, Calendar, Settings2 } from "lucide-react";
+import { Menu, Calendar, Settings2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,10 +60,6 @@ export const Header = ({ onMenuClick, sidebarOpen }: HeaderProps) => {
             Customise
           </Button>
         )}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />
-        </Button>
       </div>
     </header>
   );

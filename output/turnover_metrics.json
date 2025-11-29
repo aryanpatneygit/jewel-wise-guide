@@ -1,0 +1,14 @@
+{
+    "total_items": 250,
+    "avg_days_to_sell": 1.0,
+    "median_days_to_sell": 1.0,
+    "fast_moving_items": 250,
+    "slow_moving_items": 0,
+    "high_risk_items": 0,
+    "total_inventory_value": 335520724.72501177,
+    "slow_moving_value": 0.0,
+    "high_risk_value": 0.0,
+    "turnover_distribution": {
+        "Fast (< 1 week)": 250
+    }
+}

@@ -1,0 +1,40 @@
+
+ENSEMBLE MODEL - PREDICTION USAGE GUIDE
+========================================
+
+To predict sales for unknown/new data:
+
+1. Prepare your data with these required columns:
+   - sales_date (date format)
+   - product_category (GOLD BRACELET, GOLD CHAINS, etc.)
+   - net_weight (grams)
+   - sales_value (for calculating price_per_gram)
+   - store_id (optional, defaults to MAIN_STORE)
+   - weight_category (Light, Medium, Heavy, etc.)
+   - price_bracket (Budget, Mid, Premium, Luxury, Ultra)
+
+2. Load the ensemble model and use the prediction function:
+
+   import pickle
+   import pandas as pd
+   from ensemble_sales_prediction import predict_unknown_sales
+   
+   # Load your new data
+   new_data = pd.read_csv('your_new_data.csv')
+   
+   # Get predictions
+   predictions = predict_unknown_sales(new_data)
+   
+   # Add to dataframe
+   new_data['predicted_sales'] = predictions
+   
+3. The ensemble model uses 5 base models with weighted averaging:
+   - Linear Regression
+   - Ridge Regression
+   - Random Forest
+   - Gradient Boosting
+   - XGBoost
+
+4. Model achieves R² = 0.9962 on test data
+   RMSE = ₹5,196.97
+   MAPE = 8.03%

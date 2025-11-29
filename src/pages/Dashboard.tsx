@@ -1,7 +1,9 @@
 import { useState, useMemo } from "react";
-import { Package, TrendingDown, AlertTriangle, TrendingUp, Sparkles, Search, TrendingUp as TrendingUpIcon, Check, RotateCcw } from "lucide-react";
+import { Package, TrendingDown, AlertTriangle, TrendingUp, Sparkles, Search, TrendingUp as TrendingUpIcon, Check, RotateCcw, RefreshCw } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from "@dnd-kit/sortable";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiService } from "@/services/apiService";
 import { KPICard } from "@/components/KPICard";
 import { AISuggestionCard } from "@/components/AISuggestionCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -203,6 +205,22 @@ function DashboardContent() {
   const [hasSearched, setHasSearched] = useState(false);
   const { isCustomizeMode, toggleCustomizeMode } = useDashboardCustomization();
   
+  // Fetch real KPI data from API
+  const { data: kpis, isLoading: kpisLoading, error: kpisError } = useQuery({
+    queryKey: ['kpis'],
+    queryFn: () => apiService.fetchKPIs(),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    retry: 1,
+  });
+
+  // Fetch inventory categories for stock distribution chart
+  const { data: categories } = useQuery({
+    queryKey: ['inventory-categories'],
+    queryFn: () => apiService.fetchInventoryCategories(),
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+  
   // Load customization from localStorage with migration support
   const loadCustomization = (): DashboardCustomization => {
     try {
@@ -374,10 +392,40 @@ function DashboardContent() {
     setHasSearched(true);
   };
 
-  // Render individual KPI card
+  // Render individual KPI card with real data
   const renderKPICard = (kpiId: string) => {
     const kpiDef = KPI_CARD_DEFINITIONS.find(k => k.id === kpiId);
     if (!kpiDef) return null;
+    
+    // Use real data from API if available, otherwise fallback to static data
+    let value = kpiDef.value;
+    let change = kpiDef.change;
+    let changeType = kpiDef.changeType;
+    
+    if (kpis && !kpisLoading) {
+      switch (kpiId) {
+        case "kpi-total-stock":
+          value = `₹${(kpis.totalStockValue / 100000).toFixed(1)}L`;
+          change = `${kpis.totalItems} items in inventory`;
+          changeType = "neutral" as const;
+          break;
+        case "kpi-ageing-stock":
+          value = `${kpis.ageingStock}`;
+          change = `${((kpis.ageingStock / kpis.totalItems) * 100).toFixed(1)}% of total inventory`;
+          changeType = "neutral" as const;
+          break;
+        case "kpi-deadstock":
+          value = `${kpis.predictedDeadstock}`;
+          change = `${((kpis.predictedDeadstock / kpis.totalItems) * 100).toFixed(1)}% risk items`;
+          changeType = kpis.predictedDeadstock > 20 ? "negative" as const : "positive" as const;
+          break;
+        case "kpi-fast-moving":
+          value = `${kpis.fastMovingItems}`;
+          change = `${((kpis.fastMovingItems / kpis.totalItems) * 100).toFixed(1)}% fast movers`;
+          changeType = "positive" as const;
+          break;
+      }
+    }
     
     return (
       <CustomizableCard
@@ -387,9 +435,9 @@ function DashboardContent() {
       >
         <KPICard
           title={kpiDef.title}
-          value={kpiDef.value}
-          change={kpiDef.change}
-          changeType={kpiDef.changeType}
+          value={kpisLoading ? "Loading..." : value}
+          change={kpisLoading ? "Fetching data..." : change}
+          changeType={changeType}
           icon={kpiDef.icon}
           iconBg={kpiDef.iconBg}
         />

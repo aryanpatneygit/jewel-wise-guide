@@ -1,0 +1,51 @@
+[
+  {
+    "category": "BANGLE",
+    "total_sales": 78462990.76026605,
+    "avg_sales": 1783249.7900060466,
+    "risk": 36.191149063006854,
+    "turnover_days": 1.0
+  },
+  {
+    "category": "BRACELET",
+    "total_sales": 44580217.86599732,
+    "avg_sales": 1651119.180222123,
+    "risk": 32.03847541935383,
+    "turnover_days": 1.0
+  },
+  {
+    "category": "CHAIN",
+    "total_sales": 83831840.87283972,
+    "avg_sales": 2465642.3786129327,
+    "risk": 48.20778678651237,
+    "turnover_days": 1.0
+  },
+  {
+    "category": "EARRING",
+    "total_sales": 23885754.24570236,
+    "avg_sales": 555482.6568767991,
+    "risk": 48.319876095983474,
+    "turnover_days": 1.0
+  },
+  {
+    "category": "NECKLACE",
+    "total_sales": 77225481.56362958,
+    "avg_sales": 2758052.9129867707,
+    "risk": 38.60194702792853,
+    "turnover_days": 1.0
+  },
+  {
+    "category": "PENDANT",
+    "total_sales": 16404173.650780562,
+    "avg_sales": 443356.0446156909,
+    "risk": 5.625980450157827,
+    "turnover_days": 1.0
+  },
+  {
+    "category": "RING",
+    "total_sales": 11130265.76579619,
+    "avg_sales": 300817.9936701673,
+    "risk": 47.60842681404749,
+    "turnover_days": 1.0
+  }
+]

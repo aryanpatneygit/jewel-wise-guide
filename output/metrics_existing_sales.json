@@ -1,0 +1,11 @@
+{
+    "model": "Model A - Actual Sales Prediction",
+    "train_rmse": 3689.955791486016,
+    "test_rmse": 3822.4353613513344,
+    "train_mae": 2456.754705454028,
+    "test_mae": 2583.2902588296347,
+    "train_r2": 0.9978187727071576,
+    "test_r2": 0.9976706640685554,
+    "avg_sale_value": 90726.36012841092,
+    "rmse_percentage": 4.213147486509095
+}

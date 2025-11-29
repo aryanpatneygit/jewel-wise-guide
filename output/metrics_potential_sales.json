@@ -1,0 +1,11 @@
+{
+    "model": "Model B - Potential Sales Prediction",
+    "train_rmse": 3962.9011277294003,
+    "test_rmse": 3969.4475077382717,
+    "train_mae": 2654.1357393702647,
+    "test_mae": 2678.044084722838,
+    "train_r2": 0.9977729747566841,
+    "test_r2": 0.9977903368744943,
+    "avg_market_value": 95874.64986509274,
+    "rmse_percentage": 4.1402472012401255
+}

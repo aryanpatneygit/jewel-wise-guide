@@ -1,0 +1,45 @@
+{
+  "ensemble": {
+    "r2_score": 0.9962123755025625,
+    "rmse": 5196.973321882796,
+    "mae": 3590.650254019027,
+    "mape": 8.03377713105018,
+    "model_weights": {
+      "Linear Regression": 0.1974659395619819,
+      "Ridge": 0.19746404695030623,
+      "Random Forest": 0.20166894031263932,
+      "Gradient Boosting": 0.20169746386163825,
+      "XGBoost": 0.2017036093134343
+    }
+  },
+  "base_models": {
+    "Linear Regression": {
+      "r2_score": 0.9783379216689705,
+      "rmse": 12428.453448733435
+    },
+    "Ridge": {
+      "r2_score": 0.9783285447922422,
+      "rmse": 12431.143113713088
+    },
+    "Random Forest": {
+      "r2_score": 0.999161538279979,
+      "rmse": 2445.167692214319
+    },
+    "Gradient Boosting": {
+      "r2_score": 0.9993028571813963,
+      "rmse": 2229.6048890053466
+    },
+    "XGBoost": {
+      "r2_score": 0.999333304602107,
+      "rmse": 2180.372810330412
+    }
+  },
+  "training_info": {
+    "total_samples": 4744,
+    "training_samples": 3795,
+    "test_samples": 949,
+    "num_features": 35,
+    "stores_used": 7,
+    "date_range": "2025-08-01 00:00:00 to 2025-10-31 00:00:00"
+  }
+}

@@ -1,77 +1,75 @@
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { InventoryCard } from "@/components/InventoryCard";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, AlertCircle } from "lucide-react";
+import { apiService, type InventoryCategory } from "@/services/apiService";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const inventoryItems = [
-  {
-    category: "Gold Chains",
-    icon: "🔗",
-    stockCount: 156,
-    sales30d: 48,
-    ageing: 12,
-    deadstockRisk: "low" as const,
-    reorderSuggestion: true,
-    confidence: 92,
-    trend: "rising" as const,
-  },
-  {
-    category: "Diamond Earrings",
-    icon: "💎",
-    stockCount: 89,
-    sales30d: 12,
-    ageing: 45,
-    deadstockRisk: "medium" as const,
-    reorderSuggestion: false,
-    confidence: 78,
-    trend: "falling" as const,
-  },
-  {
-    category: "Silver Bangles",
-    icon: "⚪",
-    stockCount: 234,
-    sales30d: 18,
-    ageing: 67,
-    deadstockRisk: "high" as const,
-    reorderSuggestion: false,
-    confidence: 85,
-    trend: "falling" as const,
-  },
-  {
-    category: "Platinum Rings",
-    icon: "💍",
-    stockCount: 45,
-    sales30d: 8,
-    ageing: 23,
-    deadstockRisk: "low" as const,
-    reorderSuggestion: false,
-    confidence: 72,
-    trend: "stable" as const,
-  },
-  {
-    category: "Gold Necklaces",
-    icon: "📿",
-    stockCount: 112,
-    sales30d: 35,
-    ageing: 18,
-    deadstockRisk: "low" as const,
-    reorderSuggestion: true,
-    confidence: 88,
-    trend: "rising" as const,
-  },
-  {
-    category: "Diamond Rings",
-    icon: "💎",
-    stockCount: 67,
-    sales30d: 22,
-    ageing: 29,
-    deadstockRisk: "medium" as const,
-    reorderSuggestion: false,
-    confidence: 81,
-    trend: "stable" as const,
-  },
-];
+// Map category names to appropriate icons
+const getCategoryIcon = (category: string): string => {
+  const categoryUpper = category.toUpperCase();
+  if (categoryUpper.includes("CHAIN")) return "🔗";
+  if (categoryUpper.includes("EARRING")) return "💎";
+  if (categoryUpper.includes("BANGLE")) return "⚪";
+  if (categoryUpper.includes("RING")) return "💍";
+  if (categoryUpper.includes("NECKLACE")) return "📿";
+  if (categoryUpper.includes("BRACELET")) return "✨";
+  if (categoryUpper.includes("PENDANT")) return "🔸";
+  return "💍"; // Default icon
+};
+
+// Map risk score to risk level
+const getRiskLevel = (riskScore: number): "low" | "medium" | "high" => {
+  if (riskScore < 33) return "low";
+  if (riskScore < 66) return "medium";
+  return "high";
+};
+
+// Calculate confidence based on risk score (inverse relationship)
+const getConfidence = (riskScore: number): number => {
+  return Math.round(100 - riskScore);
+};
+
+// Transform API data to InventoryCard props
+const transformInventoryData = (data: InventoryCategory[]) => {
+  return data.map((item) => ({
+    category: item.category.charAt(0) + item.category.slice(1).toLowerCase(),
+    icon: getCategoryIcon(item.category),
+    stockCount: item.itemCount,
+    sales30d: Math.round(item.stockValue / 100000), // Convert to lakhs for display
+    ageing: Math.round(item.avgDaysToSell),
+    deadstockRisk: getRiskLevel(item.riskScore),
+    reorderSuggestion: item.trend === "rising" && item.riskScore < 40,
+    confidence: getConfidence(item.riskScore),
+    trend: item.trend,
+  }));
+};
 
 export default function Inventory() {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Fetch real inventory data from backend
+  const { data: inventoryCategories, isLoading, error } = useQuery({
+    queryKey: ["inventory-categories"],
+    queryFn: () => apiService.fetchInventoryCategories(),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    retry: 1,
+  });
+
+  // Transform and filter inventory data
+  const inventoryItems = useMemo(() => {
+    if (!inventoryCategories) return [];
+    const transformed = transformInventoryData(inventoryCategories);
+    
+    if (!searchQuery.trim()) return transformed;
+    
+    return transformed.filter((item) =>
+      item.category.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [inventoryCategories, searchQuery]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -87,16 +85,47 @@ export default function Inventory() {
           <Input
             placeholder="Search categories..."
             className="pl-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>
 
+      {/* Error State */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Failed to load inventory data. Please make sure the backend is running.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <Skeleton key={i} className="h-64 w-full" />
+          ))}
+        </div>
+      )}
+
       {/* Inventory Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {inventoryItems.map((item) => (
-          <InventoryCard key={item.category} {...item} />
-        ))}
-      </div>
+      {!isLoading && !error && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {inventoryItems.length > 0 ? (
+            inventoryItems.map((item) => (
+              <InventoryCard key={item.category} {...item} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-muted-foreground">
+                {searchQuery ? "No categories found matching your search." : "No inventory data available."}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

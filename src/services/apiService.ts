@@ -78,6 +78,17 @@ class APIService {
   }
 
   async fetchInventoryCategories(): Promise<InventoryCategory[]> {
+    try {
+      // Try to fetch from backend API first
+      const response = await fetch(`${this.baseUrl}/api/inventory/categories`);
+      if (response.ok) {
+        return response.json();
+      }
+    } catch (error) {
+      console.warn('Backend API not available, falling back to static data', error);
+    }
+    
+    // Fallback to static JSON file if backend is not available
     const response = await fetch('/data/inventory.json');
     if (!response.ok) throw new Error('Failed to fetch inventory');
     return response.json();

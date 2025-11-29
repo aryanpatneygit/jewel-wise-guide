@@ -8,7 +8,6 @@ import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import Market from "./pages/Market";
 import Keywords from "./pages/Keywords";
-import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,7 +24,6 @@ const App = () => (
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/market" element={<Market />} />
             <Route path="/keywords" element={<Keywords />} />
-            <Route path="/analytics" element={<Analytics />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -1,4 +1,5 @@
-import { Sparkles, TrendingUp, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { Sparkles, TrendingUp, AlertCircle, Check } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,8 @@ export const AISuggestionCard = ({
   impact,
   category,
 }: AISuggestionCardProps) => {
+  const [isRead, setIsRead] = useState(false);
+
   const getImpactColor = () => {
     switch (impact) {
       case "high":
@@ -43,8 +46,15 @@ export const AISuggestionCard = ({
 
   const ImpactIcon = getImpactIcon();
 
+  const handleMarkAsRead = () => {
+    setIsRead(true);
+  };
+
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-md">
+    <Card className={cn(
+      "overflow-hidden transition-all hover:shadow-md",
+      isRead && "opacity-75 border-primary/30"
+    )}>
       <CardContent className="p-6 space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
@@ -83,8 +93,21 @@ export const AISuggestionCard = ({
         </div>
 
         {/* Action */}
-        <Button className="w-full" size="sm">
-          Apply to Inventory Plan
+        <Button 
+          className="w-full" 
+          size="sm"
+          variant={isRead ? "secondary" : "default"}
+          onClick={handleMarkAsRead}
+          disabled={isRead}
+        >
+          {isRead ? (
+            <>
+              <Check className="h-4 w-4" />
+              Marked as read
+            </>
+          ) : (
+            "Mark as read"
+          )}
         </Button>
       </CardContent>
     </Card>

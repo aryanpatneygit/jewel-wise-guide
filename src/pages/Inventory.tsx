@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { InventoryCard } from "@/components/InventoryCard";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,7 @@ const transformInventoryData = (data: InventoryCategory[]) => {
 };
 
 export default function Inventory() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const { getDateRange } = useDateFilter();
   
@@ -120,9 +122,22 @@ export default function Inventory() {
       {!isLoading && !error && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {inventoryItems.length > 0 ? (
-            inventoryItems.map((item) => (
-              <InventoryCard key={item.category} {...item} />
-            ))
+            inventoryItems.map((item) => {
+              const isBracelet = item.category.toLowerCase().includes("bracelet");
+              return (
+                <div
+                  key={item.category}
+                  onClick={() => {
+                    if (isBracelet) {
+                      navigate("/inventory/bracelets");
+                    }
+                  }}
+                  className={isBracelet ? "cursor-pointer transition-transform hover:scale-105" : ""}
+                >
+                  <InventoryCard {...item} />
+                </div>
+              );
+            })
           ) : (
             <div className="col-span-full text-center py-12">
               <p className="text-muted-foreground">

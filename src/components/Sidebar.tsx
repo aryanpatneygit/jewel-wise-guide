@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -6,7 +7,9 @@ import {
   Search, 
   Calculator,
   Sparkles,
-  ChevronLeft
+  ChevronLeft,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -18,13 +21,23 @@ interface SidebarProps {
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/inventory", icon: Package, label: "Inventory" },
+  { 
+    to: "/inventory", 
+    icon: Package, 
+    label: "Inventory",
+    subItems: [
+      { to: "/inventory/bracelets", label: "Bracelets" },
+      { to: "/inventory/rings", label: "Rings", disabled: true },
+      { to: "/inventory/necklaces", label: "Necklaces", disabled: true },
+    ]
+  },
   { to: "/market", icon: TrendingUp, label: "Market Overview" },
   { to: "/keywords", icon: Search, label: "Keyword Intelligence" },
   { to: "/predictions", icon: Calculator, label: "Sales Predictions" },
 ];
 
 export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
+  const [expandedItems, setExpandedItems] = useState<string[]>(["/inventory"]);
   return (
     <aside
       className={cn(
@@ -58,25 +71,94 @@ export const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-3">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === "/"}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-primary"
-                  : "text-sidebar-foreground"
-              )
-            }
-          >
-            <item.icon className="h-5 w-5 shrink-0" />
-            {isOpen && <span>{item.label}</span>}
-          </NavLink>
-        ))}
+        {navItems.map((item) => {
+          const hasSubItems = 'subItems' in item && item.subItems;
+          const isExpanded = expandedItems.includes(item.to);
+
+          return (
+            <div key={item.to}>
+              {hasSubItems ? (
+                <div>
+                  <button
+                    onClick={() => {
+                      setExpandedItems((prev) =>
+                        prev.includes(item.to)
+                          ? prev.filter((i) => i !== item.to)
+                          : [...prev, item.to]
+                      );
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                      "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sidebar-foreground"
+                    )}
+                  >
+                    <item.icon className="h-5 w-5 shrink-0" />
+                    {isOpen && (
+                      <>
+                        <span className="flex-1 text-left">{item.label}</span>
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 shrink-0" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 shrink-0" />
+                        )}
+                      </>
+                    )}
+                  </button>
+                  {isExpanded && isOpen && (
+                    <div className="ml-8 mt-1 space-y-1">
+                      {item.subItems.map((subItem) => (
+                        <NavLink
+                          key={subItem.to}
+                          to={subItem.to}
+                          className={({ isActive }) =>
+                            cn(
+                              "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
+                              subItem.disabled
+                                ? "text-muted-foreground cursor-not-allowed opacity-50"
+                                : cn(
+                                    "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                                    isActive
+                                      ? "bg-sidebar-accent text-sidebar-primary font-medium"
+                                      : "text-sidebar-foreground"
+                                  )
+                            )
+                          }
+                          onClick={(e) => {
+                            if (subItem.disabled) {
+                              e.preventDefault();
+                            }
+                          }}
+                        >
+                          <span>{subItem.label}</span>
+                          {subItem.disabled && (
+                            <span className="text-xs">(Coming Soon)</span>
+                          )}
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <NavLink
+                  to={item.to}
+                  end={item.to === "/"}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                      "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                      isActive
+                        ? "bg-sidebar-accent text-sidebar-primary"
+                        : "text-sidebar-foreground"
+                    )
+                  }
+                >
+                  <item.icon className="h-5 w-5 shrink-0" />
+                  {isOpen && <span>{item.label}</span>}
+                </NavLink>
+              )}
+            </div>
+          );
+        })}
       </nav>
 
       {/* Footer */}

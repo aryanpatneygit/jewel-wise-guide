@@ -7,6 +7,7 @@ import { Layout } from "./components/Layout";
 import { DateFilterProvider } from "./contexts/DateFilterContext";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
+import BraceletDeepDive from "./pages/BraceletDeepDive";
 import Market from "./pages/Market";
 import Keywords from "./pages/Keywords";
 import Predictions from "./pages/Predictions";
@@ -25,6 +26,7 @@ const App = () => (
             <Route element={<Layout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/inventory" element={<Inventory />} />
+              <Route path="/inventory/bracelets" element={<BraceletDeepDive />} />
               <Route path="/market" element={<Market />} />
               <Route path="/keywords" element={<Keywords />} />
               <Route path="/predictions" element={<Predictions />} />

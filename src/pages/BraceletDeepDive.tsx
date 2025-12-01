@@ -145,6 +145,32 @@ export default function BraceletDeepDive() {
     [typePerformance]
   );
 
+  // Design style performance analysis
+  const designStylePerformance = useMemo(() => 
+    distributionByDesignStyle.map((style) => {
+      const items = braceletInventory.filter((item) => item.designStyle === style.style);
+      const avgVelocity = items.length > 0 
+        ? items.reduce((sum, item) => sum + item.salesVelocity, 0) / items.length
+        : 0;
+      return { ...style, avgVelocity };
+    }),
+    [distributionByDesignStyle]
+  );
+  
+  const topPerformingDesign = useMemo(() =>
+    designStylePerformance.length > 0 
+      ? [...designStylePerformance].sort((a, b) => b.avgVelocity - a.avgVelocity)[0]
+      : { style: "N/A", count: 0, value: 0, avgVelocity: 0 },
+    [designStylePerformance]
+  );
+  
+  const worstPerformingDesign = useMemo(() =>
+    designStylePerformance.length > 0
+      ? [...designStylePerformance].sort((a, b) => a.avgVelocity - b.avgVelocity)[0]
+      : { style: "N/A", count: 0, value: 0, avgVelocity: 0 },
+    [designStylePerformance]
+  );
+
   // Calculate metrics for AI summaries
   const fastMovingValue = useMemo(() => 
     fastMovingStock.reduce((sum, item) => sum + item.finalSellingPrice, 0),
@@ -162,6 +188,14 @@ export default function BraceletDeepDive() {
     return Array.from(typeCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
   }, [fastMovingStock]);
 
+  const fastMovingTopDesign = useMemo(() => {
+    const designCounts = new Map<string, number>();
+    fastMovingStock.forEach(item => {
+      designCounts.set(item.designStyle, (designCounts.get(item.designStyle) || 0) + 1);
+    });
+    return Array.from(designCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+  }, [fastMovingStock]);
+
   const slowMovingValue = useMemo(() => 
     slowMovingStock.reduce((sum, item) => sum + item.finalSellingPrice, 0),
     [slowMovingStock]
@@ -177,6 +211,14 @@ export default function BraceletDeepDive() {
     [slowMovingStock, slowMovingValue]
   );
 
+  const slowMovingTopDesign = useMemo(() => {
+    const designCounts = new Map<string, number>();
+    slowMovingStock.forEach(item => {
+      designCounts.set(item.designStyle, (designCounts.get(item.designStyle) || 0) + 1);
+    });
+    return Array.from(designCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+  }, [slowMovingStock]);
+
   const deadStockValueFiltered = useMemo(() => 
     deadStock.reduce((sum, item) => sum + item.finalSellingPrice, 0),
     [deadStock]
@@ -191,6 +233,14 @@ export default function BraceletDeepDive() {
     deadStock.length > 0 ? deadStockValueFiltered / deadStock.length : 0,
     [deadStock, deadStockValueFiltered]
   );
+
+  const deadStockTopDesign = useMemo(() => {
+    const designCounts = new Map<string, number>();
+    deadStock.forEach(item => {
+      designCounts.set(item.designStyle, (designCounts.get(item.designStyle) || 0) + 1);
+    });
+    return Array.from(designCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+  }, [deadStock]);
 
   // Early safety check after hooks
   if (!braceletInventory || braceletInventory.length === 0) {
@@ -383,6 +433,11 @@ export default function BraceletDeepDive() {
                 distributionByMetal,
                 distributionByDesignStyle,
                 distributionByLocation,
+                topPerformingDesign,
+                worstPerformingDesign,
+                fastMovingTopDesign,
+                slowMovingTopDesign,
+                deadStockTopDesign,
               });
             } catch (error) {
               console.error("Error generating report:", error);
@@ -438,17 +493,20 @@ export default function BraceletDeepDive() {
               <p className="text-foreground/90 leading-relaxed">
                 {topPerforming.type} bracelets are your star performers with {topPerforming.count} items generating
                 strong sales. {worstPerforming.type} bracelets need strategic intervention with only{" "}
-                {worstPerforming.count} items showing minimal movement.
+                {worstPerforming.count} items showing minimal movement. In terms of design styles, {topPerformingDesign.style} jewelry 
+                is selling significantly better (avg velocity: {topPerformingDesign.avgVelocity.toFixed(1)} units/month) compared to {worstPerformingDesign.style} designs 
+                (avg velocity: {worstPerformingDesign.avgVelocity.toFixed(1)} units/month).
               </p>
             </div>
 
             <div className="bg-muted/50 rounded-lg p-4 border-l-4 border-primary">
               <p className="text-lg font-semibold text-foreground mb-2">💡 Recommendations</p>
               <ul className="text-foreground/90 leading-relaxed space-y-1 list-disc list-inside">
-                <li>Restock {topPerforming.type} bracelets - high demand detected</li>
-                <li>Implement clearance sale for items with 180+ days in inventory</li>
+                <li>Restock {topPerforming.type} bracelets with {topPerformingDesign.style} designs - high demand detected</li>
+                <li>Implement clearance sale for items with 180+ days in inventory, especially {worstPerformingDesign.style} designs</li>
                 <li>Review pricing strategy for {worstPerforming.type} category</li>
                 <li>Consider seasonal promotions to boost slow-moving inventory</li>
+                <li>Focus on {topPerformingDesign.style} jewelry styles for new purchases as they're outperforming other designs</li>
               </ul>
             </div>
           </div>
@@ -529,13 +587,15 @@ export default function BraceletDeepDive() {
                 <div className="bg-card/50 rounded-lg p-4 border border-success/20">
                   <p className="text-foreground/90 leading-relaxed mb-3">
                     Your {fastMovingStock.length} fast-moving bracelets (valued at {formatIndianCurrency(fastMovingValue)}) are selling at 
-                    {avgSalesVelocity} units/month, indicating strong market demand. {fastMovingTopType} bracelets are your top performers.
+                    {avgSalesVelocity} units/month, indicating strong market demand. {fastMovingTopType} bracelets are your top performers. 
+                    In terms of design styles, {fastMovingTopDesign} jewelry is dominating this category, showing customers prefer this aesthetic.
                   </p>
                   <p className="text-foreground/90 leading-relaxed mb-2">
                     <strong className="text-foreground">Key Actions:</strong>
                   </p>
                   <ul className="text-foreground/90 leading-relaxed space-y-1.5 list-disc list-inside ml-2 text-sm">
                     <li>Maintain 2-3 months of inventory and set reorder points at 30-40% stock levels</li>
+                    <li>Prioritize restocking {fastMovingTopDesign} design styles as they're driving the most sales</li>
                     <li>Consider 5-10% price increases to improve margins without impacting demand</li>
                     <li>Bundle with slower-moving items to create value packages</li>
                     <li>Feature prominently in marketing and place in high-traffic retail locations</li>
@@ -563,7 +623,8 @@ export default function BraceletDeepDive() {
                 <div className="bg-card/50 rounded-lg p-4 border border-warning/20">
                   <p className="text-foreground/90 leading-relaxed mb-3">
                     Your {slowMovingStock.length} slow-moving bracelets (valued at {formatIndianCurrency(slowMovingValue)}) have been in 
-                    inventory for an average of {slowMovingAvgDays} days. Strategic intervention is needed to prevent them from becoming dead stock.
+                    inventory for an average of {slowMovingAvgDays} days. Strategic intervention is needed to prevent them from becoming dead stock. 
+                    {slowMovingTopDesign} design style appears most frequently in this category, suggesting lower customer interest in this aesthetic.
                   </p>
                   <p className="text-foreground/90 leading-relaxed mb-2">
                     <strong className="text-foreground">Key Actions:</strong>
@@ -571,6 +632,7 @@ export default function BraceletDeepDive() {
                   <ul className="text-foreground/90 leading-relaxed space-y-1.5 list-disc list-inside ml-2 text-sm">
                     <li>Implement 15-25% discounts for items approaching 90 days and create "Featured Deals" sections</li>
                     <li>Bundle with fast-moving items (e.g., "Buy fast-moving, get 30% off slow-moving")</li>
+                    <li>Avoid purchasing more {slowMovingTopDesign} designs until current stock clears</li>
                     <li>Relocate to high-traffic areas and create eye-catching displays with signage</li>
                     <li>Launch targeted social media campaigns and seasonal promotions</li>
                     <li>Train staff to proactively suggest these items based on customer preferences</li>
@@ -601,7 +663,8 @@ export default function BraceletDeepDive() {
                     Your {deadStock.length} dead stock items (valued at {formatIndianCurrency(deadStockValueFiltered)}) have been in inventory for 
                     an average of {deadStockAvgDays} days with zero sales. {deadStock.length > 0 && filteredInventory.length > 0 ? 
                     `This represents ${((deadStock.length / filteredInventory.length) * 100).toFixed(1)}% of filtered inventory` : 
-                    'This represents significant tied-up capital'}. Immediate clearance action is critical.
+                    'This represents significant tied-up capital'}. Immediate clearance action is critical. Notably, {deadStockTopDesign} design style 
+                    dominates dead stock, indicating this aesthetic is not resonating with customers—avoid future purchases in this style.
                   </p>
                   <p className="text-foreground/90 leading-relaxed mb-2">
                     <strong className="text-foreground">Key Actions:</strong>
@@ -611,16 +674,17 @@ export default function BraceletDeepDive() {
                     <li>Offer bulk promotions ("Buy 2, Get 1 Free") to move multiple units per transaction</li>
                     <li>Consider liquidation channels: outlet stores, online marketplaces, auction sites, or wholesale</li>
                     <li>Bundle as "free gifts" with fast-moving product purchases</li>
+                    <li>Completely stop purchasing {deadStockTopDesign} jewelry until existing stock is cleared</li>
                     <li>For precious metals, evaluate scrap value - may exceed discounted sales value</li>
                     <li>Set 60-90 day clearance deadline, then move to liquidation or material recovery</li>
-                    <li>Analyze patterns to prevent future dead stock accumulation</li>
+                    <li>Analyze design patterns in dead stock to prevent future accumulation of unpopular styles</li>
                   </ul>
                   <div className="mt-3 p-3 rounded bg-destructive/20 border border-destructive/30">
                     <p className="text-sm font-semibold text-destructive mb-1">⚠️ Financial Impact:</p>
                     <p className="text-sm text-foreground/90">
                       Freeing up {formatIndianCurrency(deadStockValueFiltered)} could be reinvested in {fastMovingAvgPrice > 0 ? 
                       Math.round(deadStockValueFiltered / fastMovingAvgPrice) : 0} 
-                      {" "}fast-moving bracelets generating regular sales.
+                      {" "}fast-moving bracelets (especially {fastMovingTopDesign} styles) generating regular sales.
                     </p>
                   </div>
                 </div>

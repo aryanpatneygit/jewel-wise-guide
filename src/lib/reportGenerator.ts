@@ -28,6 +28,11 @@ interface ReportData {
   distributionByMetal: Array<{ metal: string; count: number; value: number }>;
   distributionByDesignStyle: Array<{ style: string; count: number; value: number }>;
   distributionByLocation: Array<{ location: string; count: number; value: number }>;
+  topPerformingDesign: { style: string; count: number; value: number; avgVelocity: number };
+  worstPerformingDesign: { style: string; count: number; value: number; avgVelocity: number };
+  fastMovingTopDesign: string;
+  slowMovingTopDesign: string;
+  deadStockTopDesign: string;
 }
 
 export async function generateBraceletReport(data: ReportData) {
@@ -139,7 +144,11 @@ export async function generateBraceletReport(data: ReportData) {
                 text: `${data.topPerforming.type} bracelets are your star performers with ${data.topPerforming.count} items generating strong sales at an average velocity of ${data.topPerforming.avgVelocity.toFixed(1)} units/month. `,
               }),
               new TextRun({
-                text: `${data.worstPerforming.type} bracelets need strategic intervention with only ${data.worstPerforming.count} items showing minimal movement.`,
+                text: `${data.worstPerforming.type} bracelets need strategic intervention with only ${data.worstPerforming.count} items showing minimal movement. `,
+              }),
+              new TextRun({
+                text: `In terms of design styles, ${data.topPerformingDesign.style} jewelry is selling significantly better (avg velocity: ${data.topPerformingDesign.avgVelocity.toFixed(1)} units/month) compared to ${data.worstPerformingDesign.style} designs (avg velocity: ${data.worstPerformingDesign.avgVelocity.toFixed(1)} units/month).`,
+                bold: true,
               }),
             ],
             spacing: { after: 300 },
@@ -170,7 +179,11 @@ export async function generateBraceletReport(data: ReportData) {
                 text: `. These items are selling at ${data.avgSalesVelocity} units/month, indicating strong market demand. `,
               }),
               new TextRun({
-                text: `${data.fastMovingTopType} bracelets are your top performers in this category.`,
+                text: `${data.fastMovingTopType} bracelets are your top performers in this category. `,
+                bold: true,
+              }),
+              new TextRun({
+                text: `In terms of design styles, ${data.fastMovingTopDesign} jewelry is dominating this category, showing customers prefer this aesthetic.`,
                 bold: true,
               }),
             ],
@@ -195,7 +208,11 @@ export async function generateBraceletReport(data: ReportData) {
                 bold: true,
               }),
               new TextRun({
-                text: `) have been in inventory for an average of ${data.slowMovingAvgDays} days. Strategic intervention is needed to prevent them from becoming dead stock.`,
+                text: `) have been in inventory for an average of ${data.slowMovingAvgDays} days. Strategic intervention is needed to prevent them from becoming dead stock. `,
+              }),
+              new TextRun({
+                text: `${data.slowMovingTopDesign} design style appears most frequently in this category, suggesting lower customer interest in this aesthetic.`,
+                bold: true,
               }),
             ],
             spacing: { after: 200 },
@@ -222,6 +239,10 @@ export async function generateBraceletReport(data: ReportData) {
                 text: `) have been in inventory for an average of ${data.deadStockAvgDays} days with zero sales. `,
               }),
               new TextRun({
+                text: `${data.deadStockTopDesign} design style dominates dead stock, indicating this aesthetic is not resonating with customers—avoid future purchases in this style. `,
+                bold: true,
+              }),
+              new TextRun({
                 text: "This represents significant tied-up capital that could be reinvested in fast-moving inventory.",
                 bold: true,
               }),
@@ -245,14 +266,18 @@ export async function generateBraceletReport(data: ReportData) {
           new Paragraph({
             children: [
               new TextRun({
-                text: "1. Priority Restock - Bracelet Types: ",
+                text: "1. Priority Restock - Bracelet Types & Design Styles: ",
                 bold: true,
               }),
               new TextRun({
                 text: `${data.topPerforming.type} bracelets should be your highest priority for restocking. With ${data.topPerforming.count} items showing strong sales velocity of ${data.topPerforming.avgVelocity.toFixed(1)} units/month, this type demonstrates consistent market demand. `,
               }),
               new TextRun({
-                text: `Additionally, focus on ${data.fastMovingTopType} bracelets as they are your top performers in the fast-moving category.`,
+                text: `Additionally, focus on ${data.fastMovingTopType} bracelets as they are your top performers in the fast-moving category. `,
+                bold: true,
+              }),
+              new TextRun({
+                text: `Specifically, prioritize ${data.fastMovingTopDesign} design styles as they are dominating fast-moving inventory and driving the most sales.`,
                 bold: true,
               }),
             ],
@@ -293,10 +318,15 @@ export async function generateBraceletReport(data: ReportData) {
                 bold: true,
               }),
               new TextRun({
-                text: `Maintain inventory levels of design styles that match your fast-moving items to capitalize on current market trends. `,
+                text: `Focus heavily on ${data.topPerformingDesign.style} jewelry as this design style is performing exceptionally well (avg velocity: ${data.topPerformingDesign.avgVelocity.toFixed(1)} units/month). `,
+                bold: true,
               }),
               new TextRun({
-                text: `Review the distribution by design style to identify which styles are driving sales and prioritize similar designs in new purchases.`,
+                text: `Completely avoid purchasing ${data.worstPerformingDesign.style} designs (avg velocity: ${data.worstPerformingDesign.avgVelocity.toFixed(1)} units/month) until existing stock is cleared. `,
+              }),
+              new TextRun({
+                text: `${data.deadStockTopDesign} design style dominates dead stock, signaling strong customer aversion to this aesthetic.`,
+                bold: true,
               }),
             ],
             spacing: { after: 150 },
@@ -512,7 +542,17 @@ export async function generateBraceletReport(data: ReportData) {
                 bold: true,
               }),
               new TextRun({
-                text: " bracelets, while implementing aggressive clearance strategies for dead stock items. ",
+                text: " bracelets with ",
+              }),
+              new TextRun({
+                text: `${data.topPerformingDesign.style} design styles`,
+                bold: true,
+              }),
+              new TextRun({
+                text: ", while implementing aggressive clearance strategies for dead stock items. ",
+              }),
+              new TextRun({
+                text: `Avoid purchasing ${data.worstPerformingDesign.style} and ${data.deadStockTopDesign} designs as these aesthetics are not resonating with customers. `,
               }),
               new TextRun({
                 text: "By following these recommendations, you can optimize inventory turnover, free up capital, and improve overall profitability.",

@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
-import { Package, TrendingDown, AlertTriangle, TrendingUp, Sparkles, ArrowLeft, Filter } from "lucide-react";
+import { Package, TrendingDown, AlertTriangle, TrendingUp, Sparkles, ArrowLeft, Filter, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { KPICard } from "@/components/KPICard";
 import { formatIndianCurrency } from "@/lib/utils";
 import {
@@ -24,8 +25,15 @@ import {
 export default function BraceletDeepDive() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("fast-moving");
+  
+  // Global filter state that applies to all tabs
+  const [filters, setFilters] = useState<{ metal: string; location: string }>({
+    metal: "all",
+    location: "all",
+  });
 
   // Calculate KPIs with useMemo to prevent recalculation on every render
+  // Note: These use unfiltered data for overall KPIs
   const totalStockValue = useMemo(() => getTotalStockValue(), []);
   const deadStockItems = useMemo(() => getBraceletsByLifecycleStage("Dead Stock"), []);
   const deadStockValue = useMemo(() => 
@@ -35,13 +43,43 @@ export default function BraceletDeepDive() {
   const fastMovingItems = useMemo(() => getBraceletsByLifecycleStage("Fast-moving"), []);
   const avgDaysToSell = useMemo(() => getAverageDaysInInventory(), []);
 
-  // Stock classification data
-  const fastMovingStock = useMemo(() => getBraceletsByLifecycleStage("Fast-moving"), []);
-  const slowMovingStock = useMemo(() => [
-    ...getBraceletsByLifecycleStage("Slow-moving"),
-    ...getBraceletsByLifecycleStage("Ageing Stock"),
-  ], []);
-  const deadStock = useMemo(() => getBraceletsByLifecycleStage("Dead Stock"), []);
+  // Apply global filters to all inventory first
+  const filteredInventory = useMemo(() => {
+    return braceletInventory.filter((item) => {
+      const metalMatch = filters.metal === "all" || item.metal === filters.metal;
+      const locationMatch = filters.location === "all" || item.stockLocation === filters.location;
+      return metalMatch && locationMatch;
+    });
+  }, [filters]);
+
+  // Stock classification data (from filtered inventory)
+  const fastMovingStock = useMemo(() => 
+    filteredInventory.filter((item) => item.lifecycleStage === "Fast-moving"), 
+    [filteredInventory]
+  );
+  const slowMovingStock = useMemo(() => 
+    filteredInventory.filter((item) => 
+      item.lifecycleStage === "Slow-moving" || item.lifecycleStage === "Ageing Stock"
+    ), 
+    [filteredInventory]
+  );
+  const deadStock = useMemo(() => 
+    filteredInventory.filter((item) => item.lifecycleStage === "Dead Stock"), 
+    [filteredInventory]
+  );
+
+  // Get unique metals and locations for filter options
+  const uniqueMetals = useMemo(() => {
+    const metals = new Set<string>();
+    braceletInventory.forEach((item) => metals.add(item.metal));
+    return Array.from(metals).sort();
+  }, []);
+
+  const uniqueLocations = useMemo(() => {
+    const locations = new Set<string>();
+    braceletInventory.forEach((item) => locations.add(item.stockLocation));
+    return Array.from(locations).sort();
+  }, []);
 
   // Distribution data
   const distributionByType = useMemo(() => getStockDistributionByType(), []);
@@ -58,11 +96,12 @@ export default function BraceletDeepDive() {
     ((fastMovingItems.length / braceletInventory.length) * 100).toFixed(1),
     [fastMovingItems]
   );
+  // Calculate avgSalesVelocity from filtered fast moving stock for tab summaries
   const avgSalesVelocity = useMemo(() =>
-    fastMovingItems.length > 0
-      ? (fastMovingItems.reduce((sum, item) => sum + item.salesVelocity, 0) / fastMovingItems.length).toFixed(1)
+    fastMovingStock.length > 0
+      ? (fastMovingStock.reduce((sum, item) => sum + item.salesVelocity, 0) / fastMovingStock.length).toFixed(1)
       : "0",
-    [fastMovingItems]
+    [fastMovingStock]
   );
 
   // Get top performing and worst performing types
@@ -123,6 +162,10 @@ export default function BraceletDeepDive() {
     [slowMovingStock, slowMovingValue]
   );
 
+  const deadStockValueFiltered = useMemo(() => 
+    deadStock.reduce((sum, item) => sum + item.finalSellingPrice, 0),
+    [deadStock]
+  );
   const deadStockAvgDays = useMemo(() =>
     deadStock.length > 0
       ? Math.round(deadStock.reduce((sum, item) => sum + item.daysInInventory, 0) / deadStock.length)
@@ -130,8 +173,8 @@ export default function BraceletDeepDive() {
     [deadStock]
   );
   const deadStockAvgPrice = useMemo(() =>
-    deadStock.length > 0 ? deadStockValue / deadStock.length : 0,
-    [deadStock, deadStockValue]
+    deadStock.length > 0 ? deadStockValueFiltered / deadStock.length : 0,
+    [deadStock, deadStockValueFiltered]
   );
 
   // Early safety check after hooks
@@ -148,6 +191,78 @@ export default function BraceletDeepDive() {
       </div>
     );
   }
+
+  // Render filter section
+  const renderFilters = () => {
+    const hasActiveFilters = filters.metal !== "all" || filters.location !== "all";
+    
+    return (
+      <div className="mb-6 p-4 rounded-lg border bg-muted/30">
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">Filter by:</span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <label htmlFor="filter-metal" className="text-sm text-muted-foreground">
+              Metal:
+            </label>
+            <Select
+              value={filters.metal}
+              onValueChange={(value) => setFilters({ ...filters, metal: value })}
+            >
+              <SelectTrigger id="filter-metal" className="w-[180px]">
+                <SelectValue placeholder="All Metals" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Metals</SelectItem>
+                {uniqueMetals.map((metal) => (
+                  <SelectItem key={metal} value={metal}>
+                    {metal}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label htmlFor="filter-location" className="text-sm text-muted-foreground">
+              Location:
+            </label>
+            <Select
+              value={filters.location}
+              onValueChange={(value) => setFilters({ ...filters, location: value })}
+            >
+              <SelectTrigger id="filter-location" className="w-[180px]">
+                <SelectValue placeholder="All Locations" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Locations</SelectItem>
+                {uniqueLocations.map((location) => (
+                  <SelectItem key={location} value={location}>
+                    {location}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {hasActiveFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFilters({ metal: "all", location: "all" })}
+              className="ml-auto"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Clear Filters
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   // Render inventory table
   const renderInventoryTable = (items: BraceletItem[]) => (
@@ -200,7 +315,7 @@ export default function BraceletDeepDive() {
           ) : (
             <TableRow>
               <TableCell colSpan={8} className="text-center text-muted-foreground">
-                No items in this category
+                No items match the selected filters
               </TableCell>
             </TableRow>
           )}
@@ -329,6 +444,9 @@ export default function BraceletDeepDive() {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Global Filters */}
+          {renderFilters()}
+
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="fast-moving" className="flex items-center gap-2">
@@ -375,6 +493,7 @@ export default function BraceletDeepDive() {
                   Items with high sales velocity (2+ units/month) showing strong market demand
                 </p>
               </div>
+
               {renderInventoryTable(fastMovingStock)}
             </TabsContent>
 
@@ -410,6 +529,7 @@ export default function BraceletDeepDive() {
                   Items with moderate to low sales velocity requiring attention
                 </p>
               </div>
+
               {renderInventoryTable(slowMovingStock)}
             </TabsContent>
 
@@ -422,9 +542,10 @@ export default function BraceletDeepDive() {
                 </div>
                 <div className="bg-card/50 rounded-lg p-4 border border-destructive/20">
                   <p className="text-foreground/90 leading-relaxed mb-3">
-                    Your {deadStock.length} dead stock items (valued at {formatIndianCurrency(deadStockValue)}) have been in inventory for 
-                    an average of {deadStockAvgDays} days with zero sales. This represents {deadStockPercentage}% of total inventory and 
-                    significant tied-up capital. Immediate clearance action is critical.
+                    Your {deadStock.length} dead stock items (valued at {formatIndianCurrency(deadStockValueFiltered)}) have been in inventory for 
+                    an average of {deadStockAvgDays} days with zero sales. {deadStock.length > 0 && filteredInventory.length > 0 ? 
+                    `This represents ${((deadStock.length / filteredInventory.length) * 100).toFixed(1)}% of filtered inventory` : 
+                    'This represents significant tied-up capital'}. Immediate clearance action is critical.
                   </p>
                   <p className="text-foreground/90 leading-relaxed mb-2">
                     <strong className="text-foreground">Key Actions:</strong>
@@ -441,7 +562,8 @@ export default function BraceletDeepDive() {
                   <div className="mt-3 p-3 rounded bg-destructive/20 border border-destructive/30">
                     <p className="text-sm font-semibold text-destructive mb-1">⚠️ Financial Impact:</p>
                     <p className="text-sm text-foreground/90">
-                      Freeing up {formatIndianCurrency(deadStockValue)} could be reinvested in {Math.round(deadStockValue / fastMovingAvgPrice)} 
+                      Freeing up {formatIndianCurrency(deadStockValueFiltered)} could be reinvested in {fastMovingAvgPrice > 0 ? 
+                      Math.round(deadStockValueFiltered / fastMovingAvgPrice) : 0} 
                       {" "}fast-moving bracelets generating regular sales.
                     </p>
                   </div>
@@ -454,12 +576,13 @@ export default function BraceletDeepDive() {
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-1">Dead Stock Alert</h3>
                     <p className="text-sm text-muted-foreground">
-                      These items have not sold in over 90 days and represent {formatIndianCurrency(deadStockValue)} in
+                      These items have not sold in over 90 days and represent {formatIndianCurrency(deadStockValueFiltered)} in
                       tied capital. Immediate action recommended.
                     </p>
                   </div>
                 </div>
               </div>
+
               {renderInventoryTable(deadStock)}
             </TabsContent>
           </Tabs>

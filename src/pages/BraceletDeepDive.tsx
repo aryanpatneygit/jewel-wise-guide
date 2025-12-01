@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { KPICard } from "@/components/KPICard";
 import { formatIndianCurrency } from "@/lib/utils";
 import { generateBraceletReport } from "@/lib/reportGenerator";
@@ -32,6 +33,19 @@ export default function BraceletDeepDive() {
     metal: "all",
     location: "all",
   });
+
+  // State for dialog modals
+  const [openDialogs, setOpenDialogs] = useState<Record<string, boolean>>({
+    "bracelet-type": false,
+    "metal-type": false,
+    "design-style": false,
+    "stock-location": false,
+    "lifecycle-summary": false,
+  });
+  
+  const setDialogOpen = (dialogId: string, open: boolean) => {
+    setOpenDialogs((prev) => ({ ...prev, [dialogId]: open }));
+  };
 
   // Calculate KPIs with useMemo to prevent recalculation on every render
   // Note: These use unfiltered data for overall KPIs
@@ -631,123 +645,158 @@ export default function BraceletDeepDive() {
         </CardContent>
       </Card>
 
-      {/* Distribution Summary - Text-based */}
-      <div className="grid gap-6 md:grid-cols-2">
+      {/* Distribution Summary - Popup Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* By Bracelet Type */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Distribution by Bracelet Type</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {distributionByType.map((item) => (
-                <div key={item.type} className="flex items-center justify-between p-3 rounded-lg border">
-                  <span className="font-medium">{item.type}</span>
-                  <div className="text-right">
-                    <p className="font-semibold">{formatIndianCurrency(item.value)}</p>
-                    <p className="text-xs text-muted-foreground">{item.count} items</p>
+        <>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setDialogOpen("bracelet-type", true)}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Distribution by Bracelet Type</CardTitle>
+            </CardHeader>
+          </Card>
+          <Dialog open={openDialogs["bracelet-type"]} onOpenChange={(open) => setDialogOpen("bracelet-type", open)}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Distribution by Bracelet Type</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 mt-4">
+                {distributionByType.map((item) => (
+                  <div key={item.type} className="flex items-center justify-between p-3 rounded-lg border">
+                    <span className="font-medium">{item.type}</span>
+                    <div className="text-right">
+                      <p className="font-semibold">{formatIndianCurrency(item.value)}</p>
+                      <p className="text-xs text-muted-foreground">{item.count} items</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
 
         {/* By Metal Type */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Distribution by Metal Type</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {distributionByMetal.map((item) => (
-                <div key={item.metal} className="flex items-center justify-between p-3 rounded-lg border">
-                  <span className="font-medium">{item.metal}</span>
-                  <div className="text-right">
-                    <p className="font-semibold">{formatIndianCurrency(item.value)}</p>
-                    <p className="text-xs text-muted-foreground">{item.count} items</p>
+        <>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setDialogOpen("metal-type", true)}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Distribution by Metal Type</CardTitle>
+            </CardHeader>
+          </Card>
+          <Dialog open={openDialogs["metal-type"]} onOpenChange={(open) => setDialogOpen("metal-type", open)}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Distribution by Metal Type</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 mt-4">
+                {distributionByMetal.map((item) => (
+                  <div key={item.metal} className="flex items-center justify-between p-3 rounded-lg border">
+                    <span className="font-medium">{item.metal}</span>
+                    <div className="text-right">
+                      <p className="font-semibold">{formatIndianCurrency(item.value)}</p>
+                      <p className="text-xs text-muted-foreground">{item.count} items</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
 
         {/* By Design Style */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Distribution by Design Style</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {distributionByDesignStyle.map((item) => (
-                <div key={item.style} className="flex items-center justify-between p-3 rounded-lg border">
-                  <span className="font-medium">{item.style}</span>
-                  <div className="text-right">
-                    <p className="font-semibold">{formatIndianCurrency(item.value)}</p>
-                    <p className="text-xs text-muted-foreground">{item.count} items</p>
+        <>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setDialogOpen("design-style", true)}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Distribution by Design Style</CardTitle>
+            </CardHeader>
+          </Card>
+          <Dialog open={openDialogs["design-style"]} onOpenChange={(open) => setDialogOpen("design-style", open)}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Distribution by Design Style</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 mt-4">
+                {distributionByDesignStyle.map((item) => (
+                  <div key={item.style} className="flex items-center justify-between p-3 rounded-lg border">
+                    <span className="font-medium">{item.style}</span>
+                    <div className="text-right">
+                      <p className="font-semibold">{formatIndianCurrency(item.value)}</p>
+                      <p className="text-xs text-muted-foreground">{item.count} items</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
 
         {/* By Stock Location */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Distribution by Stock Location</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {distributionByLocation.map((item) => (
-                <div key={item.location} className="flex items-center justify-between p-3 rounded-lg border">
-                  <span className="font-medium">{item.location}</span>
-                  <div className="text-right">
-                    <p className="font-semibold">{formatIndianCurrency(item.value)}</p>
-                    <p className="text-xs text-muted-foreground">{item.count} items</p>
+        <>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setDialogOpen("stock-location", true)}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Distribution by Stock Location</CardTitle>
+            </CardHeader>
+          </Card>
+          <Dialog open={openDialogs["stock-location"]} onOpenChange={(open) => setDialogOpen("stock-location", open)}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Distribution by Stock Location</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 mt-4">
+                {distributionByLocation.map((item) => (
+                  <div key={item.location} className="flex items-center justify-between p-3 rounded-lg border">
+                    <span className="font-medium">{item.location}</span>
+                    <div className="text-right">
+                      <p className="font-semibold">{formatIndianCurrency(item.value)}</p>
+                      <p className="text-xs text-muted-foreground">{item.count} items</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Lifecycle Stage Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Stock Lifecycle Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {getStockValueByLifecycle().map((stage) => (
-              <div key={stage.stage} className="flex items-center justify-between p-4 rounded-lg border">
-                <div className="flex items-center gap-3">
-                  <Badge
-                    variant={
-                      stage.stage === "Fast-moving"
-                        ? "default"
-                        : stage.stage === "Dead Stock"
-                        ? "destructive"
-                        : "secondary"
-                    }
-                  >
-                    {stage.stage}
-                  </Badge>
-                  <span className="text-sm text-muted-foreground">{stage.count} items</span>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-foreground">{formatIndianCurrency(stage.value)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {((stage.value / totalStockValue) * 100).toFixed(1)}% of total
-                  </p>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </DialogContent>
+          </Dialog>
+        </>
+
+        {/* Stock Lifecycle Summary */}
+        <>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setDialogOpen("lifecycle-summary", true)}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Stock Lifecycle Summary</CardTitle>
+            </CardHeader>
+          </Card>
+          <Dialog open={openDialogs["lifecycle-summary"]} onOpenChange={(open) => setDialogOpen("lifecycle-summary", open)}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Stock Lifecycle Summary</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                {getStockValueByLifecycle().map((stage) => (
+                  <div key={stage.stage} className="flex items-center justify-between p-4 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      <Badge
+                        variant={
+                          stage.stage === "Fast-moving"
+                            ? "default"
+                            : stage.stage === "Dead Stock"
+                            ? "destructive"
+                            : "secondary"
+                        }
+                      >
+                        {stage.stage}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">{stage.count} items</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-foreground">{formatIndianCurrency(stage.value)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {((stage.value / totalStockValue) * 100).toFixed(1)}% of total
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
+      </div>
     </div>
   );
 }

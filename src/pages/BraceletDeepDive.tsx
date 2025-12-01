@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Package, TrendingDown, AlertTriangle, TrendingUp, Sparkles, ArrowLeft, Filter, X } from "lucide-react";
+import { Package, TrendingDown, AlertTriangle, TrendingUp, Sparkles, ArrowLeft, Filter, X, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { KPICard } from "@/components/KPICard";
 import { formatIndianCurrency } from "@/lib/utils";
+import { generateBraceletReport } from "@/lib/reportGenerator";
 import {
   braceletInventory,
   getBraceletsByLifecycleStage,
@@ -327,17 +328,58 @@ export default function BraceletDeepDive() {
   return (
     <div className="space-y-6">
       {/* Header with Back Button */}
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" onClick={() => navigate("/inventory")}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Inventory
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Bracelet Inventory Deep Dive</h1>
-          <p className="text-muted-foreground mt-1">
-            Comprehensive analysis of bracelet stock movement and performance
-          </p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" onClick={() => navigate("/inventory")}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Inventory
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Bracelet Inventory Deep Dive</h1>
+            <p className="text-muted-foreground mt-1">
+              Comprehensive analysis of bracelet stock movement and performance
+            </p>
+          </div>
         </div>
+        <Button
+          onClick={async () => {
+            try {
+              await generateBraceletReport({
+                totalStockValue,
+                totalItems: braceletInventory.length,
+                deadStockItems,
+                deadStockValue,
+                deadStockPercentage,
+                fastMovingItems,
+                fastMovingValue,
+                fastMovingPercentage,
+                slowMovingItems: slowMovingStock,
+                slowMovingValue,
+                avgDaysToSell,
+                topPerforming,
+                worstPerforming,
+                fastMovingTopType,
+                avgSalesVelocity,
+                fastMovingAvgPrice,
+                slowMovingAvgDays,
+                slowMovingAvgPrice,
+                deadStockAvgDays,
+                deadStockAvgPrice,
+                distributionByType,
+                distributionByMetal,
+                distributionByDesignStyle,
+                distributionByLocation,
+              });
+            } catch (error) {
+              console.error("Error generating report:", error);
+              alert("Failed to generate report. Please try again.");
+            }
+          }}
+          className="flex items-center gap-2"
+        >
+          <Download className="h-4 w-4" />
+          Download Report
+        </Button>
       </div>
 
       {/* AI Insights Hero Section */}

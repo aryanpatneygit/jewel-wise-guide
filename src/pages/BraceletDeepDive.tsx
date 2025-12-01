@@ -243,7 +243,7 @@ export default function BraceletDeepDive() {
 
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">Bracelet Inventory Health Report</h2>
 
-          <div className="space-y-3 max-w-4xl mx-auto">
+          <div className="space-y-2">
             <div className="bg-muted/50 rounded-lg p-4 border-l-4 border-primary">
               <p className="text-lg font-semibold text-foreground mb-2">📊 Overall Performance</p>
               <p className="text-foreground/90 leading-relaxed">
